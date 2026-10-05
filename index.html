@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HIPCO Stocklot</title>
+<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1d3d9b"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HIPCO"><meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{--b:#1d3d9b;--bg:#f3f5fa;--t:#1a2233;--m:#6b7590}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--t);padding-bottom:env(safe-area-inset-bottom)}
+header{background:var(--b);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;position:sticky;top:0;z-index:2}
+h1{margin:0;font-size:19px}small{opacity:.8}
+input{width:100%;margin-top:10px;padding:11px 14px;border:0;border-radius:10px;font-size:16px}
+main{padding:12px 16px}
+.c{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px #0001}
+.r{font-size:12px;color:var(--m);word-break:break-all}.p{font-weight:600;margin:4px 0}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
+.q{font-size:14px;color:var(--m)}a.btn{background:var(--b);color:#fff;text-decoration:none;padding:9px 16px;border-radius:9px;font-size:14px;font-weight:600}
+.tag{display:inline-block;background:#e6ebf8;color:var(--b);font-size:12px;border-radius:6px;padding:2px 8px;margin-right:6px}
+.e{text-align:center;color:var(--m);padding:30px}
+</style></head><body>
+<header><h1>HIPCO Stocklot</h1><small id="u">Loading…</small><input id="s" type="search" placeholder="Search · بحث (e.g. FBB, kraft, SL120)"></header>
+<main id="m"><div class="e">Loading…</div></main>
+<script>
+let L=[];
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function draw(){const q=document.getElementById('s').value.toLowerCase();
+const a=L.filter(x=>(x.ref+' '+x.product+' '+x.group).toLowerCase().includes(q));
+document.getElementById('m').innerHTML=a.length?a.map(x=>`<div class="c"><div class="r">${esc(x.ref)}</div><div class="p">${esc(x.product)}</div><span class="tag">${esc(x.group)}</span><span class="tag">${esc(x.date)}</span><div class="row"><span class="q">${esc(x.qty)}</span><a class="btn" href="${esc(x.pdf)}" target="_blank" rel="noopener">Open PDF</a></div></div>`).join(''):'<div class="e">No lists found</div>'}
+async function load(){try{const r=await fetch('lists.json?t='+Date.now(),{cache:'no-store'});const d=await r.json();L=d.lists;document.getElementById('u').textContent=L.length+' lists · updated '+d.updated;draw()}catch(e){document.getElementById('u').textContent='Offline';document.getElementById('m').innerHTML='<div class="e">Could not load. Check your internet.</div>'}}
+document.getElementById('s').oninput=draw;
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+load();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script></body></html>

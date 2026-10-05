@@ -1,0 +1,122 @@
+{
+ "updated": "2026-10-05",
+ "lists": [
+  {
+   "ref": "SL120-HA-2SCWF-05.10.2026",
+   "product": "2S Coated Woodfree (Sheets)",
+   "group": "Coated Woodfree",
+   "qty": "101.93 MT",
+   "status": "available",
+   "date": "2026-10-05",
+   "pdf": "SL120-HA-2SCWF-05_10_2026.pdf"
+  },
+  {
+   "ref": "SL119-HA-SBS-FBB-DPLX-05.10.2026",
+   "product": "SBS / FBB / Coated Duplexboard (Sheets & Reel)",
+   "group": "SBS / FBB / Duplex",
+   "qty": "51.39 MT",
+   "status": "available",
+   "date": "2026-10-05",
+   "pdf": "SL119-HA-SBS-FBB-DPLX-05_10_2026.pdf"
+  },
+  {
+   "ref": "SL118-FM-PE_CUP-05.10.2026",
+   "product": "Uncoated Cupstock (Rolls)",
+   "group": "PE Cupstock",
+   "qty": "97.50 MT",
+   "status": "available",
+   "date": "2026-10-05",
+   "pdf": "SL118-FM-PE_CUP-05_10_2026.pdf"
+  },
+  {
+   "ref": "SL117-HA-DPLX-30.09.2026",
+   "product": "Coated Duplexboard Grey / Kraft / White Back (Sheets)",
+   "group": "Duplex Board",
+   "qty": "148.73 MT",
+   "status": "available",
+   "date": "2026-09-30",
+   "pdf": "SL117-HA-DPLX-30_09_2026.pdf"
+  },
+  {
+   "ref": "SL116-FM-KLB-TL-FL-29.09.2026",
+   "product": "Kraftliner, Testliner & Fluting (Rolls)",
+   "group": "Kraftliner / Testliner / Fluting",
+   "qty": "1095.52 MT",
+   "status": "available",
+   "date": "2026-09-29",
+   "pdf": "SL116-FM-KLB-TL-FL-29_09_2026.pdf"
+  },
+  {
+   "ref": "SL115-FM-WTTL-29.09.2026",
+   "product": "White Top Testliner (Rolls)",
+   "group": "WTTL",
+   "qty": "418.76 MT",
+   "status": "available",
+   "date": "2026-09-29",
+   "pdf": "SL115-FM-WTTL-29_09_2026.pdf"
+  },
+  {
+   "ref": "SL114-HP-FL-TL-29.09.2026",
+   "product": "Fluting, Testliner & Kraftliner Substitute (Rolls)",
+   "group": "Testliner / Fluting",
+   "qty": "1316.08 MT",
+   "status": "available",
+   "date": "2026-09-29",
+   "pdf": "SL114-HP-FL-TL-29_09_2026.pdf"
+  },
+  {
+   "ref": "SL113-HY-KLB-29.09.2026",
+   "product": "Kraftliner (Rolls)",
+   "group": "Kraftliner",
+   "qty": "190.65 MT",
+   "status": "available",
+   "date": "2026-09-29",
+   "pdf": "SL113-HY-KLB-29_09_2026.pdf"
+  },
+  {
+   "ref": "SL112-HY-TL-FL-29.09.2026",
+   "product": "Fluting & Testliner (Rolls)",
+   "group": "Testliner / Fluting",
+   "qty": "990.04 MT",
+   "status": "available",
+   "date": "2026-09-29",
+   "pdf": "SL112-HY-TL-FL-29_09_2026.pdf"
+  },
+  {
+   "ref": "SL111-PE-TM-29.09.2026",
+   "product": "PE Coated Cupstock (Cupforma Natura)",
+   "group": "PE Cupstock",
+   "qty": "23.02 MT",
+   "status": "available",
+   "date": "2026-09-29",
+   "pdf": "SL111-PE-TM-29_09_2026.pdf"
+  },
+  {
+   "ref": "SL110-CKB-UKB-O-28.09.2026",
+   "product": "CKB (LPB Grade) & Uncoated Kraftback Board (Rolls)",
+   "group": "CKB",
+   "qty": "2651.62 MT",
+   "status": "available",
+   "date": "2026-09-28",
+   "pdf": "SL110-CKB-UKB-O-28_09_2026.pdf"
+  },
+  {
+   "ref": "SL109-FR-NEWSPRINT-28.09.2026",
+   "product": "Newsprint (Rolls)",
+   "group": "Newsprint",
+   "qty": "602.56 MT",
+   "status": "available",
+   "date": "2026-09-28",
+   "pdf": "SL109-FR-NEWSPRINT-28_09_2026.pdf"
+  },
+  {
+   "ref": "SL107-O-GC1&GC2-28.09.2026",
+   "product": "Coated FBB GC1 & GC2 (Non Prime Grade)",
+   "group": "FBB / GC1-GC2",
+   "qty": "116.86 MT",
+   "status": "available",
+   "date": "2026-09-28",
+   "pdf": "SL107-O-GC1_GC2-28_09_2026.pdf"
+  }
+ ]
+}
