@@ -23,7 +23,7 @@
 
   // ---------- password gate: everything in /data is encrypted; the team password opens it ----------
   var PW_STORE = 'hipco_pw_v1';
-  var priv = null, cmeta = null, dbCode = '';
+  var priv = null, cmeta = null, dbCode = CFG.dbCode || '';
   function b64d(x){ var t = atob(x), a = new Uint8Array(t.length); for(var i = 0; i < t.length; i++) a[i] = t.charCodeAt(i); return a; }
   function normPw(p){ return String(p || '').trim().toLowerCase(); }
   async function unwrap(pw){
@@ -120,13 +120,13 @@
     if(!r.ok) throw new Error('static load');
     var t = await r.text();
     if(t === statJson) return false;
-    var p = await openEnv(JSON.parse(t));
+    if(!cmeta){ var rc = await fetch('data/crypto.json?t=' + Date.now(), { cache: 'no-store' }); if(rc.ok) cmeta = await rc.json(); }
+    var p = JSON.parse(t);
     statJson = t;
     stat.stocklots = p.docs || [];
     stat.clients = p.clients || {};
     stat.meta = { crypto: cmeta, info: { lastUpdated: p.updated || '' } };
     seedData = p.seed || seedData;
-    if(!dbCode && p.dbsec){ try{ dbCode = (await openEnv(p.dbsec)).code || ''; }catch(e){} }
     return true;
   }
   function seedLocal(){
@@ -227,7 +227,6 @@
   }
   var ready = (async function(){
     try{
-      await gate();
       await loadStatic();
       if(REMOTE){ try{ await seedRemoteOnce(); await loadRemote(); }catch(e){ if(window.console) console.error(e); seedLocal(); } } else seedLocal();
     }catch(e){ if(window.console) console.error(e); subs.forEach(function(x){ if(x.err) x.err({ code: 'load' }); }); }
