@@ -16,6 +16,7 @@
   var dyn = { sent: {}, followup: {}, inquiries: {}, stocklots: {} };   // id -> data
   var subs = [];       // {kind:'col'|'doc', path, cb, err}
   var statJson = '';
+  var loadErr = false;
 
   function clone(o){ return o == null ? o : JSON.parse(JSON.stringify(o)); }
   function lsGet(){ try{ return JSON.parse(localStorage.getItem(LS) || 'null'); }catch(e){ return null; } }
@@ -132,7 +133,8 @@
   function seedLocal(){
     // first run in local mode: start from the history exported from the Claude board
     var have = lsGet();
-    if(have){ dyn = have; return; }
+    var n = 0; if(have) DYN.forEach(function(c){ n += Object.keys(have[c] || {}).length; });
+    if(have && n){ dyn = have; return; }
     DYN.forEach(function(c){ dyn[c] = clone(seedData[c] || {}); });
     lsSet();
   }
@@ -179,7 +181,7 @@
     collection: function(name){
       return { onSnapshot: function(cb, err){
         var s = { kind: 'col', path: name, cb: cb, err: err }; subs.push(s);
-        setTimeout(function(){ try{ cb(colSnap(name)); }catch(e){} }, 0);
+        setTimeout(function(){ try{ if(loadErr && name === 'stocklots' && err) err({ code: 'no connection' }); else cb(colSnap(name)); }catch(e){} }, 0);
         return function(){ subs = subs.filter(function(x){ return x !== s; }); };
       } };
     },
@@ -220,14 +222,14 @@
   async function refresh(first){
     try{
       var changed = false;
-      try{ changed = await loadStatic(); }catch(e){ if(first) throw e; }
+      try{ changed = await loadStatic(); if(loadErr){ loadErr = false; seedLocal(); changed = true; } }catch(e){ if(first) throw e; }
       if(REMOTE){ try{ if(await loadRemote()) changed = true; }catch(e){ if(e.code === 'denied'){ subs.forEach(function(s){ if(s.err) s.err({ code: 'denied' }); }); } } }
       if(changed || first) fire();
     }catch(e){ subs.forEach(function(s){ if(s.err) s.err({ code: 'load' }); }); }
   }
   var ready = (async function(){
     try{
-      await loadStatic();
+      try{ await loadStatic(); }catch(e){ loadErr = true; throw e; }
       if(REMOTE){ try{ await seedRemoteOnce(); await loadRemote(); }catch(e){ if(window.console) console.error(e); seedLocal(); } } else seedLocal();
     }catch(e){ if(window.console) console.error(e); subs.forEach(function(x){ if(x.err) x.err({ code: 'load' }); }); }
     fire();
