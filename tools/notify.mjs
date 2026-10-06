@@ -11,6 +11,14 @@ async function send(name,title,body){
   const t=await r.text(); console.log('::notice title=send-'+name+'::status '+r.status+' '+t.replace(/\n/g,' ').slice(0,200)); if(!r.ok||/"errors"/.test(t)){ process.exitCode=1; } return r.ok;
 }
 const [mode,a,b]=process.argv.slice(2);
+if(mode==='inspect'){
+  const r=await fetch('https://api.onesignal.com/apps/'+APP_ID+'/users/by/onesignal_id/'+a,{headers:{Authorization:'Key '+KEY}});
+  const j=await r.json().catch(()=>({})); console.log('::notice title=inspect-status::'+r.status);
+  console.log('::notice title=inspect-identity::'+JSON.stringify(j.identity||{}));
+  console.log('::notice title=inspect-tags::'+JSON.stringify((j.properties||{}).tags||{}));
+  for(const s of (j.subscriptions||[])) console.log('::notice title=inspect-sub::'+JSON.stringify({type:s.type,enabled:s.enabled,notification_types:s.notification_types,sdk:s.sdk,app_version:s.app_version,web_auth:!!s.web_auth,device_model:s.device_model,device_os:s.device_os,token:(s.token||'').slice(0,40)}));
+  process.exit(0);
+}
 if(mode==='test'){ await send(a,'HIPCO test','Notifications work ✓ You will get an alert here when a new list is added.'); process.exit(0); }
 if(mode==='new'){
   const old=fs.existsSync(a)?JSON.parse(fs.readFileSync(a,'utf8')):{docs:[]}, cur=JSON.parse(fs.readFileSync(b,'utf8'));

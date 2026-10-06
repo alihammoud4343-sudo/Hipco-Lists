@@ -2,7 +2,7 @@ name: Notify salesmen
 on:
   push:
     branches: [main]
-    paths: ['data/vault.json','tools/test_notify.json']
+    paths: ['data/vault.json','tools/test_notify.json','tools/inspect.json']
 jobs:
   notify:
     runs-on: ubuntu-latest
@@ -21,4 +21,10 @@ jobs:
         run: |
           if ! git diff --quiet HEAD~1 HEAD -- tools/test_notify.json 2>/dev/null; then
             node tools/notify.mjs test "$(node -e "console.log(JSON.parse(require('fs').readFileSync('tools/test_notify.json','utf8')).to)")"
+          fi
+      - name: Inspect (when tools/inspect.json changes)
+        env: { ONESIGNAL_API_KEY: '${{ secrets.ONESIGNAL_API_KEY }}' }
+        run: |
+          if ! git diff --quiet HEAD~1 HEAD -- tools/inspect.json 2>/dev/null; then
+            node tools/notify.mjs inspect "$(node -e "console.log(JSON.parse(require('fs').readFileSync('tools/inspect.json','utf8')).id)")"
           fi
