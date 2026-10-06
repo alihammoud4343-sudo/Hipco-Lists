@@ -139,8 +139,12 @@
     lsSet();
   }
   async function loadRemote(){
-    var r = await rest('kv?select=col,id,data&col=in.(' + DYN.join(',') + ')&limit=20000', { headers: hdr() });
-    var rows = await r.json();
+    var rows = [];   // the server hands out at most 1000 rows per request, so read page by page
+    for(var off = 0; off < 100000; off += 1000){
+      var r = await rest('kv?select=col,id,data&col=in.(' + DYN.join(',') + ')&order=col,id&limit=1000&offset=' + off, { headers: hdr() });
+      var page = await r.json(); rows = rows.concat(page);
+      if(page.length < 1000) break;
+    }
     var n = { sent: {}, followup: {}, inquiries: {}, reminders: {}, stocklots: {} };
     rows.forEach(function(x){ if(n[x.col]) n[x.col][x.id] = x.data; });
     // keep optimistic writes that have not reached the server yet
