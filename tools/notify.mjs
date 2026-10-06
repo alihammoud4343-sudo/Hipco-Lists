@@ -7,7 +7,7 @@ if(!KEY){ console.log('No ONESIGNAL_API_KEY secret — nothing sent'); process.e
 async function send(name,title,body){
   const r=await fetch('https://api.onesignal.com/notifications?c=push',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Key '+KEY},
     body:JSON.stringify({app_id:APP_ID,target_channel:'push',filters:[{field:'tag',key:'n_'+name,relation:'=',value:'1'}],headings:{en:title},contents:{en:body},url:URL_})});
-  const t=await r.text(); console.log(name,r.status,t.slice(0,160)); return r.ok;
+  const t=await r.text(); console.log(name,r.status,t.slice(0,160)); if(!r.ok||/"errors"/.test(t)){ process.exitCode=1; } return r.ok;
 }
 const [mode,a,b]=process.argv.slice(2);
 if(mode==='test'){ await send(a,'HIPCO test','Notifications work ✓ You will get an alert here when a new list is added.'); process.exit(0); }
