@@ -20,7 +20,7 @@ jobs:
         env: { ONESIGNAL_API_KEY: '${{ secrets.ONESIGNAL_API_KEY }}' }
         run: |
           if ! git diff --quiet HEAD~1 HEAD -- tools/test_notify.json 2>/dev/null; then
-            node tools/notify.mjs test "$(node -e "console.log(JSON.parse(require('fs').readFileSync('tools/test_notify.json','utf8')).to)")"
+            node tools/notify.mjs testfile tools/test_notify.json
           fi
       - name: Inspect (when tools/inspect.json changes)
         env: { ONESIGNAL_API_KEY: '${{ secrets.ONESIGNAL_API_KEY }}' }

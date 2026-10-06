@@ -19,6 +19,10 @@ if(mode==='inspect'){
   for(const s of (j.subscriptions||[])) console.log('::notice title=inspect-sub::'+JSON.stringify({type:s.type,enabled:s.enabled,notification_types:s.notification_types,sdk:s.sdk,app_version:s.app_version,web_auth:!!s.web_auth,device_model:s.device_model,device_os:s.device_os,token:(s.token||'').slice(0,40)}));
   process.exit(0);
 }
+if(mode==='testfile'){
+  const j=JSON.parse(fs.readFileSync(a,'utf8'));
+  await send(j.to,j.title||'HIPCO test',j.body||'Notifications work ✓ You will get an alert here when a new list is added.'); process.exit(0);
+}
 if(mode==='test'){ await send(a,'HIPCO test','Notifications work ✓ You will get an alert here when a new list is added.'); process.exit(0); }
 if(mode==='new'){
   const old=fs.existsSync(a)?JSON.parse(fs.readFileSync(a,'utf8')):{docs:[]}, cur=JSON.parse(fs.readFileSync(b,'utf8'));
