@@ -7,7 +7,7 @@ console.log('::notice title=notify::key present='+(!!KEY)+' length='+(KEY||'').l
 if(!KEY){ console.log('::error title=notify::No ONESIGNAL_API_KEY secret — nothing sent'); process.exit(1); }
 async function send(name,title,body){
   const r=await fetch('https://api.onesignal.com/notifications?c=push',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Key '+KEY},
-    body:JSON.stringify({app_id:APP_ID,target_channel:'push',...(name==='ALL'?{included_segments:['Subscribed Users']}:{filters:[{field:'tag',key:'n_'+name,relation:'=',value:'1'}]}),headings:{en:title},contents:{en:body},url:URL_})});
+    body:JSON.stringify({app_id:APP_ID,target_channel:'push',...(name.startsWith('ID:')?{include_aliases:{onesignal_id:[name.slice(3)]}}:name==='ALL'?{included_segments:['Subscribed Users']}:{filters:[{field:'tag',key:'n_'+name,relation:'=',value:'1'}]}),headings:{en:title},contents:{en:body},url:URL_})});
   const t=await r.text(); console.log('::notice title=send-'+name+'::status '+r.status+' '+t.replace(/\n/g,' ').slice(0,200)); if(!r.ok||/"errors"/.test(t)){ process.exitCode=1; } return r.ok;
 }
 const [mode,a,b]=process.argv.slice(2);
