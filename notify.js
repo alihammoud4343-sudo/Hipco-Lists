@@ -5,7 +5,7 @@
   function get(){ try{ var v=localStorage.getItem(KEY)||''; if(!v) return []; if(v.charAt(0)==='[') return JSON.parse(v); return [v]; }catch(e){ return []; } }
   function set(v){ try{ localStorage.setItem(KEY,JSON.stringify(v)); }catch(e){} }
   var SUM='Summary';
-  async function applyTags(OneSignal,sel){ var t={}; NAMES.concat([SUM]).forEach(function(n){ t['n_'+n]=sel.indexOf(n)>-1?'1':'0'; }); await OneSignal.User.addTags(t); }
+  async function applyTags(OneSignal,sel){ var t={}; sel.forEach(function(n){ t['n_'+n]='1'; }); try{ await OneSignal.User.addTags(t); }catch(e){} for(var k in t){ try{ await OneSignal.User.addTag(k,t[k]); }catch(e){} } NAMES.concat([SUM]).forEach(function(n){ if(sel.indexOf(n)<0){ try{ OneSignal.User.removeTag('n_'+n); }catch(e){} } }); var got={}; try{ got=OneSignal.User.getTags()||{}; }catch(e){} return got; }
   var ios=/iphone|ipad|ipod/i.test(navigator.userAgent), standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   OneSignalDeferred.push(async function(OneSignal){
@@ -54,9 +54,9 @@
           await OneSignal.Notifications.requestPermission();
           var ok=OneSignal.Notifications.permission;
           if(!ok){ msg.textContent='Notifications are blocked. Allow them in your phone Settings → Notifications → HIPCO, then try again.'; return; }
-          await applyTags(OneSignal,sel);
-          set(sel); paint(); msg.textContent='Done ✓ Alerts are on for: '+sel.join(', ')+'.';
-          setTimeout(function(){ back.remove(); },1400);
+          var got=await applyTags(OneSignal,sel);
+          set(sel); paint(); msg.textContent='Done ✓ Alerts are on for: '+sel.join(', ')+'. (saved '+Object.keys(got).filter(function(k){return k.indexOf('n_')===0;}).length+' of '+sel.length+')';
+          setTimeout(function(){ back.remove(); },4000);
         }catch(e){ msg.textContent='Something went wrong. Close and try again.'; }
       });
     };
