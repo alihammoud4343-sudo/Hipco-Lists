@@ -845,6 +845,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   <div id="iqList"></div>
 </section>
 <section class="inq" id="remView" hidden>
+  <div id="rmWho"></div>
   <form class="inq-form" id="remForm" autocomplete="off" novalidate>
     <div class="inq-title" dir="rtl">تذكير جديد</div>
     <div class="inq-sub">New reminder &middot; one per client</div>
@@ -861,7 +862,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     <button type="submit" class="inq-send" id="rmSend">Save reminder &middot; حفظ التذكير</button>
     <div class="inq-err" id="rmErr" role="alert"></div>
   </form>
-  <div class="inq-list-h"><h3>Reminders</h3><div style="display:flex;gap:6px"><select id="rmFilter" aria-label="Filter by salesman"></select><select id="rmFilterSt" aria-label="Filter by status"></select></div></div>
+  <div class="inq-list-h" id="rmHead"><h3>Reminders</h3><div style="display:flex;gap:6px"><select id="rmFilter" aria-label="Filter by salesman"></select><select id="rmFilterSt" aria-label="Filter by status"></select></div></div>
   <div id="rmList"></div>
 </section>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -2641,7 +2642,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(har) har.textContent = (m === 'inq') ? 'طلب أسعار' : (m === 'rem') ? 'تذكيرات' : 'متوفر في الخارج';
     window.scrollTo(0, 0);
     if(m === 'inq'){ inqFormReset(false); renderInq(); }
-    if(m === 'rem'){ renderRem(); }
+    if(m === 'rem'){ if(remMe && !remTeam) remFilter = remMe; renderRem(); }
     if(stock) render();
   };
   function pad3(n){ return ('000' + n).slice(-3); }
@@ -3231,9 +3232,25 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(b) b.innerHTML = hit ? '<span class="bdg">🔔 ' + hit + ' reminder' + (hit > 1 ? 's' : '') + ' match a new list</span>' : '';
     if(remEl && !remEl.hidden) renderRem();
   }
+  var remMe = ''; try{ remMe = localStorage.getItem('hipco_rem_me') || ''; }catch(e){}
+  var remTeam = false;
+  window.__remWho = function(n){ remMe = n; remTeam = false; remFilter = n; try{ localStorage.setItem('hipco_rem_me', n); }catch(e){} document.getElementById('rmSm').value = n; renderRem(); };
+  window.__remChange = function(){ remMe = ''; try{ localStorage.removeItem('hipco_rem_me'); }catch(e){} renderRem(); };
+  window.__remTeam = function(v){ remTeam = v; remFilter = v ? '' : remMe; renderRem(); };
   function renderRem(){
+    var who = document.getElementById('rmWho'), pick = !remMe;
+    ['remForm','rmHead','rmList'].forEach(function(k){ document.getElementById(k).style.display = pick ? 'none' : ''; });
+    if(pick){
+      who.innerHTML = '<div class="inq-form" style="text-align:center"><div class="inq-title" style="font-family:var(--f-display)">Who are you?</div><div class="inq-sub">Pick your name once &mdash; you will see only your own reminders</div><div class="inq-types" style="justify-content:center">' +
+        REM_SMS.map(function(n){ return '<button type="button" class="home-card" style="padding:12px 18px;border-radius:999px;box-shadow:none;border:1px solid var(--line)" onclick="__remWho(\'' + n + '\')"><span class="tt" style="font-size:16px">' + n + '</span></button>'; }).join('') + '</div></div>';
+      return;
+    }
+    var mine = remDocs.filter(function(r){ return r.salesman === remMe && r.status !== 'done'; }), hits = mine.filter(function(r){ return remMatches(r).length; }).length;
+    who.innerHTML = '<div class="rem-sm" style="margin:2px 2px 10px;align-items:center"><span>👤 ' + escapeHtml(remMe) + '&rsquo;s reminders &middot; ' + mine.length + ' open' + (hits ? ' &middot; <span style="color:#146B3A">🔔 ' + hits + ' match a list</span>' : '') + '</span><span><a href="#" onclick="__remTeam(' + (remTeam ? 'false' : 'true') + ');return false" style="color:var(--navy);font-weight:600">' + (remTeam ? 'My reminders' : 'Team view') + '</a> &middot; <a href="#" onclick="__remChange();return false" style="color:var(--ink-2);font-weight:600">Not you?</a></span></div>';
+    if(!remTeam){ remFilter = remMe; }
+    var sm = document.getElementById('rmSm'); if(!sm.value) sm.value = remMe; document.getElementById('rmClient').placeholder = sm.value ? 'Choose from the list or type' : 'Choose salesman first';
     remFillForm();
-    var sel = document.getElementById('rmFilter');
+    var sel = document.getElementById('rmFilter'); sel.style.display = remTeam ? '' : 'none';
     sel.innerHTML = '<option value="">All salesmen</option>' + REM_SMS.map(function(x){ return '<option' + (remFilter === x ? ' selected' : '') + '>' + x + '</option>'; }).join('');
     var s2 = document.getElementById('rmFilterSt');
     s2.innerHTML = [['open','Open'],['done','Done'],['','All']].map(function(o){ return '<option value="' + o[0] + '"' + (remFilterSt === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
