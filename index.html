@@ -703,6 +703,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     <div class="hero-top">
       <img class="hero-logo" src="img/logo-white.png" alt="HIPCO — Hammoud International Paper SAL">
       <div class="hero-actions">
+        <button id="backBtn" class="icon-btn" type="button" title="Back" aria-label="Back" onclick="__back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
         <button id="homeBtn" class="icon-btn" type="button" title="Home" aria-label="Home" onclick="__go('home')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>
         <button id="lockBtn" class="icon-btn wide" hidden type="button" title="Prices &amp; suppliers" aria-label="Unlock prices and suppliers">
           <svg id="lockIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="lockLabel">Unlock</span>
@@ -2576,6 +2577,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     viewerPagesEl.innerHTML = '<div class="viewer-status">Opening report&hellip;</div>';
     viewerEl.hidden = false;
     document.documentElement.classList.add('viewer-open');
+    try{ history.pushState({ v: 1 }, ''); }catch(e){}
     var token = ++viewer.token;
     var blob;
     try{
@@ -2602,8 +2604,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     }
   }
 
-  document.getElementById('viewerClose').addEventListener('click', closeViewer);
-  document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape' && !viewerEl.hidden) closeViewer(); });
+  document.getElementById('viewerClose').addEventListener('click', function(){ window.__back(); });
+  document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape' && !viewerEl.hidden) window.__back(); });
   viewerDlBtn.addEventListener('click', async function(){
     if(!viewer.blob){ try{ window.open(PDF_BASE + pdfFileName(viewer.ref), '_blank'); }catch(e){} return; }
     viewerDlBtn.disabled = true;
@@ -3313,6 +3315,27 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   });
   document.getElementById('rmFilter').addEventListener('change', function(){ remFilter = this.value; renderRem(); });
   document.getElementById('rmFilterSt').addEventListener('change', function(){ remFilterSt = this.value; renderRem(); });
+
+  // ---------- Back step: one step back (phone back button / swipe too), never straight to the start ----------
+  var navCur = 'home', _goBase = window.__go;
+  window.__go = function(m, fromPop){
+    var prev = navCur; _goBase(m); navCur = m;
+    if(!fromPop && m !== prev){ try{ history.pushState({ s: m }, ''); }catch(e){} }
+  };
+  window.__back = function(){
+    var wasV = !viewerEl.hidden, was = navCur;
+    if(wasV || was !== 'home'){ try{ history.back(); }catch(e){}
+      setTimeout(function(){   // if the browser did not move (e.g. embedded view), step back by hand
+        if(wasV && !viewerEl.hidden) closeViewer();
+        else if(!wasV && navCur === was && was !== 'home'){ _goBase('home'); navCur = 'home'; }
+      }, 300); }
+  };
+  try{ history.replaceState({ s: 'home' }, ''); }catch(e){}
+  window.addEventListener('popstate', function(ev){
+    if(!viewerEl.hidden){ closeViewer(); return; }
+    var s = (ev.state && ev.state.s) || 'home';
+    _goBase(s); navCur = s;
+  });
 
   // roll the date over at midnight while the page stays open
   var lastDay = todayKey();
