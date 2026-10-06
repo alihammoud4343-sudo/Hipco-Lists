@@ -3,8 +3,9 @@
 <link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#0B1A3F"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="HIPCO"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0}body{-webkit-text-size-adjust:100%}.hero{padding-top:calc(22px + env(safe-area-inset-top,0px))!important}.home{padding-top:calc(36px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))!important}.home{top:0!important;left:0!important;right:0!important;bottom:auto!important;height:100vh!important;height:100lvh!important;min-height:-webkit-fill-available}html:has(#homeScreen:not([hidden])),html:has(#homeScreen:not([hidden])) body{background:#0B1A3F!important}.home>:first-child{margin-top:auto!important}.home>:last-child{margin-bottom:auto!important}.home{padding-top:calc(24px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}</style>
+<style>html{background:#0B1A3F}#splash{position:fixed;inset:0;z-index:99998;background:linear-gradient(160deg,#27499A,#0B1A3F);display:flex;flex-direction:column;align-items:center;justify-content:center}#splash img{width:min(240px,64vw)}#splash i{margin-top:22px;width:26px;height:26px;border:3px solid #ffffff44;border-top-color:#fff;border-radius:50%;animation:spl .8s linear infinite}@keyframes spl{to{transform:rotate(360deg)}}*,*::before,*::after{box-sizing:border-box}html,body{margin:0}body{-webkit-text-size-adjust:100%}.hero{padding-top:calc(22px + env(safe-area-inset-top,0px))!important}.home{padding-top:calc(36px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))!important}.home{top:0!important;left:0!important;right:0!important;bottom:auto!important;height:100vh!important;height:100lvh!important;min-height:-webkit-fill-available}html:has(#homeScreen:not([hidden])),html:has(#homeScreen:not([hidden])) body{background:#0B1A3F!important}.home>:first-child{margin-top:auto!important}.home>:last-child{margin-bottom:auto!important}.home{padding-top:calc(24px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}</style>
 </head><body>
+<div id="splash"><img src="img/logo-white.png" alt="HIPCO"><i></i></div>
 <script>(function(){try{var d=document.createElement('div');d.style.cssText='position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top,0px)';document.documentElement.appendChild(d);var v=parseFloat(getComputedStyle(d).paddingTop)||0;d.remove();
 if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.textContent='.hero{padding-top:70px!important}.home{padding-top:84px!important}';document.head.appendChild(st);}}catch(e){}})();</script>
 <script src="config.js?v=12"></script><script src="hipco-db.js?v=12"></script>
@@ -693,8 +694,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
 .iq-cancel{display:block;width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid var(--line,#ccc);background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}
 </style>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@400;500&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <img class="watermark" src="img/watermark.png" alt="">
 
@@ -3342,6 +3343,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   setInterval(function(){ var t = todayKey(); if(t !== lastDay){ lastDay = t; render(); } }, 60000);
 
   window.__go('home');
+  try{ var sp = document.getElementById('splash'); if(sp) sp.remove(); }catch(e){}
   boot();
 })();
 </script>
