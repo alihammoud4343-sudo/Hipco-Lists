@@ -1,0 +1,24 @@
+name: Check shared database
+on:
+  push:
+    paths: ['tools/dbcheck.json']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test the shared database
+        run: |
+          U=$(node -e "const s=require('fs').readFileSync('config.js','utf8');console.log(/supabaseUrl: \"([^\"]*)\"/.exec(s)[1])")
+          K=$(node -e "const s=require('fs').readFileSync('config.js','utf8');console.log(/anonKey: \"([^\"]*)\"/.exec(s)[1])")
+          C=$(node -e "const s=require('fs').readFileSync('config.js','utf8');console.log(/dbCode: \"([^\"]*)\"/.exec(s)[1])")
+          w=$(curl -s -o /tmp/w.txt -w "%{http_code}" "$U/rest/v1/kv" -H "apikey: $K" -H "x-hipco: $C" -H "Content-Type: application/json" -H "Prefer: resolution=merge-duplicates,return=minimal" -d '[{"col":"meta","id":"ping","data":{"t":1}}]')
+          echo "::notice title=write-with-code::$w $(head -c 200 /tmp/w.txt)"
+          r=$(curl -s "$U/rest/v1/kv?select=col,id,data&col=eq.meta&id=eq.ping" -H "apikey: $K" -H "x-hipco: $C")
+          echo "::notice title=read-with-code::$r"
+          n=$(curl -s "$U/rest/v1/kv?select=col,id&col=eq.meta&id=eq.ping" -H "apikey: $K")
+          echo "::notice title=read-WITHOUT-code (must be empty [])::$n"
+          nw=$(curl -s -o /dev/null -w "%{http_code}" "$U/rest/v1/kv" -H "apikey: $K" -H "Content-Type: application/json" -H "Prefer: return=minimal" -d '[{"col":"meta","id":"hack","data":{}}]')
+          echo "::notice title=write-WITHOUT-code (must be 401/403)::$nw"
+          d=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$U/rest/v1/kv?col=eq.meta&id=eq.ping" -H "apikey: $K" -H "x-hipco: $C")
+          echo "::notice title=cleanup::$d"
