@@ -344,6 +344,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   }
   .tick.on{ background:var(--good); border-color:var(--good); }
   .client-row.is-sent .cname{ color:var(--ink-2); }
+  .grade{ display:inline-block; margin-left:6px; min-width:18px; padding:1px 6px; border-radius:9px; font-size:11px; font-weight:800; line-height:16px; text-align:center; vertical-align:1px; letter-spacing:0; }
+  .grade.g-A{ background:#12275C; color:#fff; }
+  .grade.g-B{ background:#D6DFF0; color:#12275C; }
+  .grade.g-C{ background:#EEF1F8; color:#5A6687; }
   .sent-when{ display:block; font-size:12px; font-weight:600; color:var(--good); margin-top:1px; }
   .fu-btn{ flex:none; font:inherit; font-size:10.5px; font-weight:600; border:1px dashed var(--line); background:transparent; color:var(--ink-2); border-radius:999px; padding:3px 8px; cursor:pointer; white-space:nowrap; }
   .fu-btn.s-interested{ border:1px solid var(--good); color:var(--good); }
@@ -1366,6 +1370,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   var sentMap = {};   // offerId -> { clientKey: {sentAt, company, salesman} }
   var toastTimer = null;
 
+  function gradeBadge(c){ var g = c && c.grade; return (g === 'A' || g === 'B' || g === 'C') ? '<span class="grade g-' + g + '" title="Client grade ' + g + '">' + g + '</span>' : ''; }
   function clientKey(c){
     return String((c && c.company) || '').toLowerCase().normalize('NFKD')
       .replace(/[^a-z0-9\u0600-\u06ff]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'client';
@@ -1709,7 +1714,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
           var tick = '<button type="button" class="tick' + (info ? ' on' : '') + '" aria-pressed="' + (info ? 'true' : 'false') + '" aria-label="' + (info ? 'Sent — tap to unmark' : 'Mark as sent') + '" onclick="__toggleSent(\'' + jsStr(docId) + '\',\'' + jsStr(key) + '\')">' + (info ? CHECK : '') + '</button>';
           return '<div class="client-row' + (info ? ' is-sent' : '') + '">' +
             tick +
-            '<span class="cname">' + escapeHtml(c.company) + (info ? '<span class="sent-when">Sent ' + escapeHtml(shortDate(info.sentAt)) + ', ' + escapeHtml(shortTime(info.sentAt)) + '</span>' : '') + '</span>' +
+            '<span class="cname">' + escapeHtml(c.company) + gradeBadge(c) + (info ? '<span class="sent-when">Sent ' + escapeHtml(shortDate(info.sentAt)) + ', ' + escapeHtml(shortTime(info.sentAt)) + '</span>' : '') + '</span>' +
             '<span class="cmeta">' +
               (c.country ? '<span class="ccountry">' + escapeHtml(c.country) + '</span>' : '') +
               (c.phone ? '<span class="cphone">' + escapeHtml(c.phone) + '</span>' : '') +
@@ -1884,7 +1889,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
         var hit = g.rows.filter(function(r){ return st === 'interested' ? (r.st === 'interested' || r.st === 'price') : r.st === st; });
         var qs = {}; hit.forEach(function(r){ qs[r.q] = 1; });
         var notes = hit.filter(function(r){ return r.note; }).map(function(r){ return r.note; });
-        return '<div class="drow"><div class="n">' + escapeHtml(g.c.company) + '</div>' +
+        return '<div class="drow"><div class="n">' + escapeHtml(g.c.company) + gradeBadge(g.c) + '</div>' +
           '<div class="m">' + escapeHtml([g.c.country, tagBy === 'q' ? g.sm : Object.keys(qs).join(', ')].filter(Boolean).join(' · ')) + (tagBy === 'q' ? '' : '') + '</div>' +
           (notes.length ? '<div class="t">' + escapeHtml(notes.join(' / ')) + '</div>' : '') + '</div>';
       }).join('') + '</div>';
@@ -1899,7 +1904,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   function sentWho(rows){
     return '<div class="dlist">' + rows.filter(function(r){ return r.sent; }).sort(function(x, y){ return String(y.sentAt).localeCompare(String(x.sentAt)); }).map(function(r){
       var when = r.sentAt ? shortDate(r.sentAt) + (shortTime(r.sentAt) ? ', ' + shortTime(r.sentAt) : '') : '';
-      return '<div class="drow wrow"><div><div class="n">' + escapeHtml(r.c.company) + '</div><div class="m">' + escapeHtml([r.sm, r.c.country, when].filter(Boolean).join(' · ')) + '</div>' +
+      return '<div class="drow wrow"><div><div class="n">' + escapeHtml(r.c.company) + gradeBadge(r.c) + '</div><div class="m">' + escapeHtml([r.sm, r.c.country, when].filter(Boolean).join(' · ')) + '</div>' +
         (r.note ? '<div class="t">' + escapeHtml(r.note) + '</div>' : '') + '</div>' + stPill(r.st) + '</div>';
     }).join('') + '</div>';
   }
@@ -1941,7 +1946,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var html = '<button type="button" class="dlist-btn" onclick="__dashOpen(\'' + jsStr(key) + '\')"><span>Notes &middot; ' + n + '</span><span>' + (open ? '&minus;' : '+') + '</span></button>';
     if(open) html += '<div class="dlist">' + items.map(function(it){
       return '<div class="nl-h">' + escapeHtml(it.ref) + '</div>' + it.rows.map(function(r){
-        return '<div class="drow"><div class="n">' + escapeHtml(r.c.company) + ' <span class="spill-inline">' + escapeHtml(r.st ? followLabel(r.st) : 'sent') + '</span></div><div class="t">' + escapeHtml(r.note) + '</div></div>';
+        return '<div class="drow"><div class="n">' + escapeHtml(r.c.company) + gradeBadge(r.c) + ' <span class="spill-inline">' + escapeHtml(r.st ? followLabel(r.st) : 'sent') + '</span></div><div class="t">' + escapeHtml(r.note) + '</div></div>';
       }).join('');
     }).join('') + '</div>';
     return html;
@@ -2178,7 +2183,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var rows = items.filter(function(r){ var k = r.id + '|' + clientKey(r.c); if(seen[k]) return false; seen[k] = true; return true; }).map(function(r){
       var ag = agoText(r.at), key = clientKey(r.c), late = ag.days >= 1;
       var link = waLink(r.d, r.c, true);
-      return '<div class="todo-row' + (late ? ' late' : '') + '"><div class="todo-main"><div class="n">' + escapeHtml(r.c.company) + '</div>' +
+      return '<div class="todo-row' + (late ? ' late' : '') + '"><div class="todo-main"><div class="n">' + escapeHtml(r.c.company) + gradeBadge(r.c) + '</div>' +
         '<div class="m">' + escapeHtml([r.sm, r.c.country].filter(Boolean).join(' · ')) + ' &middot; ' + escapeHtml(r.d.reference || '') + '</div>' +
         (r.note ? '<div class="t">' + escapeHtml(r.note) + '</div>' : '') + '</div>' +
         '<div class="todo-side"><span class="todo-when">' + escapeHtml('asked ' + ag.txt) + '</span>' +
@@ -2199,13 +2204,13 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var html = '<div class="dash-frow">' + chip('int', 'Interested', ints.length) + chip('no', 'Not interested', nos.length) + chip('notes', 'Notes', noted.length) + '</div>';
     if(cur === 'notes'){
       html += noted.length ? '<div class="dlist">' + noted.map(function(r){
-        return '<div class="drow"><div class="wrow"><div><div class="n">' + escapeHtml(r.c.company) + '</div><div class="m">' + escapeHtml([r.c.country, r.d.reference].filter(Boolean).join(' · ')) + '</div></div>' + stPill(r.st) + '</div><div class="t">' + escapeHtml(r.note) + '</div></div>';
+        return '<div class="drow"><div class="wrow"><div><div class="n">' + escapeHtml(r.c.company) + gradeBadge(r.c) + '</div><div class="m">' + escapeHtml([r.c.country, r.d.reference].filter(Boolean).join(' · ')) + '</div></div>' + stPill(r.st) + '</div><div class="t">' + escapeHtml(r.note) + '</div></div>';
       }).join('') + '</div>' : '<div class="dcard-sub">No notes yet.</div>';
     }else if(cur === 'int' || cur === 'no'){
       var sel = cur === 'int' ? ints : nos, want = cur === 'int';
       html += sel.length ? '<div class="dlist">' + sel.map(function(g){
         var hit = g.rows.filter(function(r){ return want ? (r.st === 'interested' || r.st === 'price') : r.st === 'no'; });
-        return '<div class="drow"><div class="n">' + escapeHtml(g.c.company) + '</div><div class="m">' + escapeHtml(g.c.country || '') + '</div>' +
+        return '<div class="drow"><div class="n">' + escapeHtml(g.c.company) + gradeBadge(g.c) + '</div><div class="m">' + escapeHtml(g.c.country || '') + '</div>' +
           hit.map(function(r){ return '<div class="t"><b>' + escapeHtml(r.d.reference || '') + '</b> ' + stPill(r.st) + (r.note ? ' &mdash; ' + escapeHtml(r.note) : '') + '</div>'; }).join('') + '</div>';
       }).join('') + '</div>' : '<div class="dcard-sub">Nobody yet.</div>';
     }
