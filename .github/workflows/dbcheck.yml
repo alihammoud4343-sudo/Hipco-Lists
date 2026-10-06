@@ -22,3 +22,8 @@ jobs:
           echo "::notice title=write-WITHOUT-code (must be 401/403)::$nw"
           d=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$U/rest/v1/kv?col=eq.meta&id=eq.ping" -H "apikey: $K" -H "x-hipco: $C")
           echo "::notice title=cleanup::$d"
+          for c in meta sent followup inquiries reminders stocklots; do
+            k=$(curl -s -o /dev/null -D - "$U/rest/v1/kv?select=id&col=eq.$c" -H "apikey: $K" -H "x-hipco: $C" -H "Prefer: count=exact" -H "Range: 0-0" | grep -i content-range | tr -d '\r')
+            echo "::notice title=rows-$c::$k"
+          done
+          echo "::notice title=reminders::$(curl -s "$U/rest/v1/kv?select=id,data->>salesman,data->>client&col=eq.reminders" -H "apikey: $K" -H "x-hipco: $C" | head -c 600)"
