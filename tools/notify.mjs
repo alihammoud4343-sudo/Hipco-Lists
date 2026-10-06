@@ -3,11 +3,12 @@
 //        node tools/notify.mjs test <Name>                              → test alert to one salesman
 import fs from 'node:fs';
 const APP_ID='9722a093-2b4b-4002-a1d8-bc4910456d78', KEY=process.env.ONESIGNAL_API_KEY, URL_='https://alihammoud4343-sudo.github.io/Hipco-Lists/';
-if(!KEY){ console.log('No ONESIGNAL_API_KEY secret — nothing sent'); process.exit(0); }
+console.log('::notice title=notify::key present='+(!!KEY)+' length='+(KEY||'').length+' prefix='+(KEY||'').slice(0,10));
+if(!KEY){ console.log('::error title=notify::No ONESIGNAL_API_KEY secret — nothing sent'); process.exit(1); }
 async function send(name,title,body){
   const r=await fetch('https://api.onesignal.com/notifications?c=push',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Key '+KEY},
     body:JSON.stringify({app_id:APP_ID,target_channel:'push',filters:[{field:'tag',key:'n_'+name,relation:'=',value:'1'}],headings:{en:title},contents:{en:body},url:URL_})});
-  const t=await r.text(); console.log(name,r.status,t.slice(0,160)); if(!r.ok||/"errors"/.test(t)){ process.exitCode=1; } return r.ok;
+  const t=await r.text(); console.log('::notice title=send-'+name+'::status '+r.status+' '+t.replace(/\n/g,' ').slice(0,200)); if(!r.ok||/"errors"/.test(t)){ process.exitCode=1; } return r.ok;
 }
 const [mode,a,b]=process.argv.slice(2);
 if(mode==='test'){ await send(a,'HIPCO test','Notifications work ✓ You will get an alert here when a new list is added.'); process.exit(0); }
