@@ -566,6 +566,25 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .home-card .tt{ font-size:19px; font-weight:700; line-height:1.2; }
   .home-card .ar{ font-family:var(--f-arabic); font-size:16px; color:var(--navy); margin-top:3px; }
   .home-card .ds{ font-size:12.5px; color:var(--ink-2); margin-top:4px; }
+
+  /* ---------- Reminders ---------- */
+  .rem-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:14px; margin-bottom:10px; }
+  .rem-card.done{ opacity:.6; }
+  .rem-card .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .rem-card .cl{ font-weight:700; font-size:16px; color:var(--ink); }
+  .rem-card .want{ font-size:13px; color:var(--navy-ink); font-weight:700; margin-top:3px; }
+  .rem-card .nt{ margin-top:8px; font-size:13.5px; color:var(--ink); background:var(--ground); border-radius:10px; padding:8px 10px; white-space:pre-wrap; }
+  .rem-card .meta{ margin-top:8px; font-size:11.5px; color:var(--ink-2); }
+  .rem-card .st{ font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px; background:var(--chip); color:var(--navy-ink); white-space:nowrap; }
+  .rem-card .st.due{ background:#FBE3E6; color:#B0374A; }
+  .rem-match{ margin-top:8px; padding:8px 10px; border-radius:10px; background:#E3F4EA; color:#146B3A; font-size:13px; font-weight:700; }
+  .rem-match div{ font-weight:600; margin-top:2px; }
+  .rem-card .acts{ display:flex; gap:8px; margin-top:10px; }
+  .rem-card .acts button{ font:inherit; font-size:13px; padding:7px 12px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer; }
+  .rem-card .acts button.sure{ background:#B0374A; color:#fff; border-color:#B0374A; }
+  .rem-sm{ margin:16px 2px 8px; font-weight:700; font-size:14px; color:var(--navy-ink); display:flex; justify-content:space-between; }
+  .rem-two{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .home-card .bdg{ display:inline-block; margin-top:5px; font-size:12px; font-weight:700; color:#146B3A; background:#E3F4EA; border-radius:999px; padding:3px 9px; }
   .inq{ max-width:760px; margin:0 auto; padding:14px 14px 40px; }
   .inq[hidden]{ display:none; }
   .inq-form{ background:var(--surface); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow); padding:18px 16px 16px; }
@@ -771,6 +790,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></span>
       <span><div class="tt">New Inquiry</div><div class="ar" dir="rtl">طلب أسعار</div><div class="ds">Each salesman fills this for every new client inquiry</div></span>
     </button>
+    <button type="button" class="home-card" onclick="__go('rem')">
+      <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+      <span><div class="tt">Reminders</div><div class="ar" dir="rtl">تذكيرات</div><div class="ds">Your own client reminders &mdash; get told when a matching list arrives</div><div id="remBadge"></div></span>
+    </button>
   </div>
 </div>
 
@@ -820,6 +843,26 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   </form>
   <div class="inq-list-h"><h3>Inquiries</h3><div style="display:flex;gap:6px"><select id="iqFilter" aria-label="Filter by salesman"></select><select id="iqFilterSt" aria-label="Filter by status"></select></div></div>
   <div id="iqList"></div>
+</section>
+<section class="inq" id="remView" hidden>
+  <form class="inq-form" id="remForm" autocomplete="off" novalidate>
+    <div class="inq-title" dir="rtl">تذكير جديد</div>
+    <div class="inq-sub">New reminder &middot; one per client</div>
+    <div class="inq-grid">
+      <div class="inq-field full"><label for="rmSm"><span>Salesman</span><span class="ar">اسم مندوب المبيعات</span></label>
+        <select id="rmSm"><option value="">Choose&hellip;</option><option>Ahmad</option><option>Nadine</option><option>Ouseili</option><option>Wissam</option><option>Ali</option><option>Bob</option><option>Mohamad</option></select></div>
+      <div class="inq-field full"><label for="rmClient"><span>Client</span><span class="ar">العميل</span></label><input id="rmClient" type="text" autocomplete="off" placeholder="Client name"></div>
+      <div class="inq-field full"><label for="rmQual"><span>Quality he wants (optional)</span><span class="ar">النوعية المطلوبة</span></label><select id="rmQual"></select></div>
+      <div class="inq-field full"><label><span>GSM range (optional)</span><span class="ar">الجراماج</span></label>
+        <div class="rem-two"><input id="rmG1" type="text" inputmode="numeric" placeholder="From e.g. 200" oninput="this.value=this.value.replace(/\D/g,'')"><input id="rmG2" type="text" inputmode="numeric" placeholder="To e.g. 300" oninput="this.value=this.value.replace(/\D/g,'')"></div></div>
+      <div class="inq-field full"><label for="rmNote"><span>Note</span><span class="ar">ملاحظة</span></label><textarea id="rmNote" placeholder="e.g. Not interested in this list, wants 200-300 GSM next time"></textarea></div>
+      <div class="inq-field full"><label for="rmDue"><span>Remind me on (optional)</span><span class="ar">تذكير بتاريخ</span></label><input id="rmDue" type="date"></div>
+    </div>
+    <button type="submit" class="inq-send" id="rmSend">Save reminder &middot; حفظ التذكير</button>
+    <div class="inq-err" id="rmErr" role="alert"></div>
+  </form>
+  <div class="inq-list-h"><h3>Reminders</h3><div style="display:flex;gap:6px"><select id="rmFilter" aria-label="Filter by salesman"></select><select id="rmFilterSt" aria-label="Filter by status"></select></div></div>
+  <div id="rmList"></div>
 </section>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-labelledby="viewerTitle">
@@ -2585,18 +2628,20 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
 
   // ---------- Home screen + price inquiries (db collection "inquiries") ----------
   var inqDocs = [], inqFilter = '', inqFilterSt = '', inqBusy = false;
-  var homeEl = document.getElementById('homeScreen'), inqEl = document.getElementById('inqView');
+  var homeEl = document.getElementById('homeScreen'), inqEl = document.getElementById('inqView'), remEl = document.getElementById('remView');
   function setHidden(sel, h){ var e = document.querySelector(sel); if(e) e.style.display = h ? 'none' : ''; }
   window.__go = function(m){ if(window.__inqEditCancel && m!=='inq'){ try{ window.__inqEditCancel(true); }catch(e){} }
     homeEl.hidden = (m !== 'home'); try{ document.documentElement.style.background = document.body.style.background = (m === 'home') ? '#0B1A3F' : ''; }catch(e){}
     inqEl.hidden = (m !== 'inq');
+    remEl.hidden = (m !== 'rem');
     var stock = (m === 'stock');
-    setHidden('#toolbar', !stock); setHidden('#rangeLine', !stock); setHidden('#list', !stock); setHidden('footer', !stock); setHidden('#statsRow', m === 'inq');
+    setHidden('#toolbar', !stock); setHidden('#rangeLine', !stock); setHidden('#list', !stock); setHidden('footer', !stock); setHidden('#statsRow', m === 'inq' || m === 'rem');
     var h1 = document.querySelector('.hero-title h1'), har = document.querySelector('.hero-title .ar');
-    if(h1) h1.textContent = (m === 'inq') ? 'New Inquiry' : 'Hipco Stocklot Offshore';
-    if(har) har.textContent = (m === 'inq') ? 'طلب أسعار' : 'متوفر في الخارج';
+    if(h1) h1.textContent = (m === 'inq') ? 'New Inquiry' : (m === 'rem') ? 'Reminders' : 'Hipco Stocklot Offshore';
+    if(har) har.textContent = (m === 'inq') ? 'طلب أسعار' : (m === 'rem') ? 'تذكيرات' : 'متوفر في الخارج';
     window.scrollTo(0, 0);
     if(m === 'inq'){ inqFormReset(false); renderInq(); }
+    if(m === 'rem'){ renderRem(); }
     if(stock) render();
   };
   function pad3(n){ return ('000' + n).slice(-3); }
@@ -3062,6 +3107,11 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
         if(!inqEl.hidden){ renderInq(); var n = document.getElementById('iqNo'); if(n && !document.getElementById('iqClient').value) n.value = 'INQ-' + pad3(nextInqNo()); }
       }, function(){ /* inquiries unavailable in this view */ });
 
+      db.collection('reminders').onSnapshot(function(snap){
+        remDocs = snap.docs.map(function(doc){ var x = Object.assign({}, doc.data() || {}); x._id = doc.id; return x; });
+        remRefresh();
+      }, function(){ /* reminders unavailable in this view */ });
+
       db.collection('stocklots').onSnapshot(function(snap){
         allDocs = snap.docs.map(function(doc){
           // snapshot data is frozen by the platform — copy it before adding our own fields
@@ -3087,6 +3137,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
         render();
         prepOpenHashes();
         applySecrets();
+        try{ remRefresh(); }catch(e){}
       }, function(err){
         listEl.innerHTML = '<div class="empty">Couldn\'t load live data (' + escapeHtml(err && err.code) + ').</div>';
       });
@@ -3108,6 +3159,105 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       listEl.innerHTML = '<div class="empty">Live data isn\'t available in this view.</div>';
     }
   }
+
+  // ---------- Reminders (db collection "reminders"): each salesman keeps his own client reminders ----------
+  var remDocs = [], remFilter = '', remFilterSt = 'open', remBusy = false, remArm = {};
+  var REM_SMS = ['Ahmad','Nadine','Ouseili','Wissam','Ali','Bob','Mohamad'];
+  function remNums(s){ return (String(s || '').match(/\d+/g) || []).map(Number).filter(function(n){ return n >= 20 && n <= 1000; }); }
+  function remMatches(r){
+    // lists added AFTER the reminder was made, still available, matching quality and overlapping GSM
+    if(!r.quality && !r.gsmFrom && !r.gsmTo) return [];
+    var lo = parseInt(r.gsmFrom, 10) || 0, hi = parseInt(r.gsmTo, 10) || 0;
+    if(lo && !hi) hi = lo; if(hi && !lo) lo = hi; if(lo > hi){ var t = lo; lo = hi; hi = t; }
+    return (typeof allDocs !== 'undefined' ? allDocs : []).filter(function(d){
+      if(d.status === 'sold') return false;
+      if(String(d.dateAdded || '') < String(r.date || '')) return false;
+      if(String(d.dateAdded || '') === String(r.date || '') && (d.createdAt || 0) && r.createdAt && (d.createdAt < r.createdAt)) return false;
+      if(r.quality && d.quality_group !== r.quality) return false;
+      if(lo){ var ns = remNums(d.gsm); if(ns.length){ var a = Math.min.apply(null, ns), b = Math.max.apply(null, ns); if(b < lo || a > hi) return false; } }
+      return true;
+    });
+  }
+  function remQualities(){
+    var seen = {}; (typeof allDocs !== 'undefined' ? allDocs : []).forEach(function(d){ if(d.quality_group) seen[d.quality_group] = 1; });
+    return Object.keys(seen).sort();
+  }
+  function remFillForm(){
+    var q = document.getElementById('rmQual'), cur = q.value;
+    q.innerHTML = '<option value="">Any / not decided</option>' + remQualities().map(function(x){ return '<option' + (cur === x ? ' selected' : '') + '>' + escapeHtml(x) + '</option>'; }).join('');
+  }
+  function remRefresh(){
+    var open = remDocs.filter(function(r){ return r.status !== 'done'; });
+    var hit = open.filter(function(r){ return remMatches(r).length; }).length;
+    var b = document.getElementById('remBadge');
+    if(b) b.innerHTML = hit ? '<span class="bdg">🔔 ' + hit + ' reminder' + (hit > 1 ? 's' : '') + ' match a new list</span>' : '';
+    if(remEl && !remEl.hidden) renderRem();
+  }
+  function renderRem(){
+    remFillForm();
+    var sel = document.getElementById('rmFilter');
+    sel.innerHTML = '<option value="">All salesmen</option>' + REM_SMS.map(function(x){ return '<option' + (remFilter === x ? ' selected' : '') + '>' + x + '</option>'; }).join('');
+    var s2 = document.getElementById('rmFilterSt');
+    s2.innerHTML = [['open','Open'],['done','Done'],['','All']].map(function(o){ return '<option value="' + o[0] + '"' + (remFilterSt === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
+    var list = remDocs.filter(function(r){ return (!remFilter || r.salesman === remFilter) && (!remFilterSt || (r.status === 'done' ? 'done' : 'open') === remFilterSt); });
+    var el = document.getElementById('rmList');
+    if(!list.length){ el.innerHTML = '<div class="empty">No reminders here yet.</div>'; return; }
+    var by = {}; list.forEach(function(r){ (by[r.salesman || 'Other'] = by[r.salesman || 'Other'] || []).push(r); });
+    var today = todayKey(), html = '';
+    Object.keys(by).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); }).forEach(function(n){
+      var rs = by[n].sort(function(a, b){ return (remMatches(b).length ? 1 : 0) - (remMatches(a).length ? 1 : 0) || (b.createdAt || 0) - (a.createdAt || 0); });
+      html += '<div class="rem-sm"><span>' + escapeHtml(n) + '</span><span>' + rs.length + '</span></div>';
+      rs.forEach(function(r){
+        var id = jsStr(r._id), done = r.status === 'done', ms = done ? [] : remMatches(r);
+        var want = [r.quality, (r.gsmFrom || r.gsmTo) ? ((r.gsmFrom || r.gsmTo) + (r.gsmTo && r.gsmTo !== r.gsmFrom && r.gsmFrom ? '–' + r.gsmTo : '') + ' GSM') : ''].filter(Boolean).join(' · ');
+        var dueNow = !done && r.due && r.due <= today;
+        html += '<div class="rem-card' + (done ? ' done' : '') + '"><div class="top"><div><div class="cl">' + escapeHtml(r.client || '') + '</div>' + (want ? '<div class="want">' + escapeHtml(want) + '</div>' : '') + '</div>' +
+          (done ? '<span class="st">Done</span>' : (dueNow ? '<span class="st due">Due ' + escapeHtml(fmtInqDate(r.due)) + '</span>' : (r.due ? '<span class="st">' + escapeHtml(fmtInqDate(r.due)) + '</span>' : ''))) + '</div>' +
+          (r.note ? '<div class="nt">' + escapeHtml(r.note) + '</div>' : '') +
+          (ms.length ? '<div class="rem-match">🔔 New list matches' + ms.slice(0, 4).map(function(d){ return '<div>' + escapeHtml((d.reference || '').split('-')[0] || d.reference || '') + ' · ' + escapeHtml(d.quality_group || '') + ' · ' + escapeHtml(d.gsm || '') + ' · ' + escapeHtml(d.qty_mt || '') + '</div>'; }).join('') + '</div>' : '') +
+          '<div class="meta">Added ' + escapeHtml(fmtInqDate(r.date)) + '</div>' +
+          '<div class="acts"><button type="button" onclick="__remDone(\'' + id + '\',' + (done ? 'false' : 'true') + ')">' + (done ? 'Reopen' : '✓ Done') + '</button>' +
+          '<button type="button" onclick="__remDel(this,\'' + id + '\')">Delete</button></div></div>';
+      });
+    });
+    el.innerHTML = html;
+  }
+  window.__remDone = async function(id, v){
+    if(!dbRef) return;
+    try{ await dbRef.doc('reminders/' + id).update({ status: v ? 'done' : 'open', doneAt: Date.now() }); showToast(v ? 'Marked done' : 'Reopened'); }
+    catch(e){ showToast('Could not save (no permission)'); }
+  };
+  window.__remDel = async function(btn, id){
+    if(!remArm[id]){
+      remArm[id] = setTimeout(function(){ delete remArm[id]; if(btn && btn.isConnected){ btn.classList.remove('sure'); btn.textContent = 'Delete'; } }, 4000);
+      btn.classList.add('sure'); btn.textContent = 'Tap again to delete'; return;
+    }
+    clearTimeout(remArm[id]); delete remArm[id];
+    if(!dbRef) return;
+    try{ await dbRef.doc('reminders/' + id).delete(); showToast('Reminder deleted'); }
+    catch(e){ showToast('Could not delete (no permission)'); }
+  };
+  document.getElementById('remForm').addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    if(remBusy || !dbRef) return;
+    var g = function(k){ return document.getElementById(k).value.trim(); }, err = document.getElementById('rmErr'), btn = document.getElementById('rmSend');
+    err.textContent = '';
+    if(!g('rmSm')){ err.textContent = 'Choose the salesman.'; return; }
+    if(!g('rmClient')){ err.textContent = 'Write the client name.'; return; }
+    if(!g('rmNote') && !g('rmQual') && !g('rmG1') && !g('rmG2')){ err.textContent = 'Add a note, a quality or a GSM range.'; return; }
+    remBusy = true; btn.disabled = true;
+    var id = 'rem' + Date.now().toString(36);
+    try{
+      await dbRef.doc('reminders/' + id).set({ salesman: g('rmSm'), client: g('rmClient'), quality: g('rmQual'), gsmFrom: g('rmG1'), gsmTo: g('rmG2'), note: g('rmNote').slice(0, 500), due: g('rmDue'), date: todayKey(), createdAt: Date.now(), status: 'open' });
+      showToast('Reminder saved');
+      ['rmClient','rmNote','rmG1','rmG2','rmDue'].forEach(function(k){ document.getElementById(k).value = ''; });
+      document.getElementById('rmQual').value = '';
+      remFilter = g('rmSm') ? remFilter : remFilter;
+    }catch(e){ err.textContent = 'Could not save. Please try again.'; }
+    remBusy = false; btn.disabled = false;
+  });
+  document.getElementById('rmFilter').addEventListener('change', function(){ remFilter = this.value; renderRem(); });
+  document.getElementById('rmFilterSt').addEventListener('change', function(){ remFilterSt = this.value; renderRem(); });
 
   // roll the date over at midnight while the page stays open
   var lastDay = todayKey();
