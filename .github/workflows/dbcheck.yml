@@ -7,7 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Load board history
+        if: ${{ hashFiles('tools/dbseed.go') == '' }}
+        run: node tools/dbseed.mjs
       - name: Test the shared database
+        if: always()
         run: |
           U=$(node -e "const s=require('fs').readFileSync('config.js','utf8');console.log(/supabaseUrl: \"([^\"]*)\"/.exec(s)[1])")
           K=$(node -e "const s=require('fs').readFileSync('config.js','utf8');console.log(/anonKey: \"([^\"]*)\"/.exec(s)[1])")
