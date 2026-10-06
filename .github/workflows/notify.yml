@@ -1,0 +1,24 @@
+name: Notify salesmen
+on:
+  push:
+    branches: [main]
+    paths: ['data/vault.json','tools/test_notify.json']
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: New list alerts
+        env: { ONESIGNAL_API_KEY: '${{ secrets.ONESIGNAL_API_KEY }}' }
+        run: |
+          git show HEAD~1:data/vault.json > /tmp/old.json 2>/dev/null || echo '{"docs":[]}' > /tmp/old.json
+          node tools/notify.mjs new /tmp/old.json data/vault.json
+      - name: Test alert (when tools/test_notify.json changes)
+        env: { ONESIGNAL_API_KEY: '${{ secrets.ONESIGNAL_API_KEY }}' }
+        run: |
+          if ! git diff --quiet HEAD~1 HEAD -- tools/test_notify.json 2>/dev/null; then
+            node tools/notify.mjs test "$(node -e "console.log(JSON.parse(require('fs').readFileSync('tools/test_notify.json','utf8')).to)")"
+          fi
