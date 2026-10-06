@@ -851,7 +851,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     <div class="inq-grid">
       <div class="inq-field full"><label for="rmSm"><span>Salesman</span><span class="ar">اسم مندوب المبيعات</span></label>
         <select id="rmSm"><option value="">Choose&hellip;</option><option>Ahmad</option><option>Nadine</option><option>Ouseili</option><option>Wissam</option><option>Ali</option><option>Bob</option><option>Mohamad</option></select></div>
-      <div class="inq-field full"><label for="rmClient"><span>Client</span><span class="ar">العميل</span></label><input id="rmClient" type="text" autocomplete="off" placeholder="Client name"></div>
+      <div class="inq-field full" style="position:relative"><label for="rmClient"><span>Client</span><span class="ar">العميل</span></label><input id="rmClient" type="text" autocomplete="off" placeholder="Choose salesman first" style="padding-right:38px"><button type="button" class="iq-arrow" id="rmArrow" aria-label="Show clients"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="iq-sug" id="rmSug" hidden></div></div>
       <div class="inq-field full"><label for="rmQual"><span>Quality he wants (optional)</span><span class="ar">النوعية المطلوبة</span></label><select id="rmQual"></select></div>
       <div class="inq-field full"><label><span>GSM range (optional)</span><span class="ar">الجراماج</span></label>
         <div class="rem-two"><input id="rmG1" type="text" inputmode="numeric" placeholder="From e.g. 200" oninput="this.value=this.value.replace(/\D/g,'')"><input id="rmG2" type="text" inputmode="numeric" placeholder="To e.g. 300" oninput="this.value=this.value.replace(/\D/g,'')"></div></div>
@@ -2926,7 +2926,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var key = CL.lockedSec.ct;
     if(CL.lockedKey === key && CL.locked) return;
     try{ var pl = await secDecryptDoc(CL.lockedSec); CL.locked = pl.clients || []; CL.lockedKey = key; }catch(e){ CL.locked = null; }
-    refreshSug();
+    refreshSug(); try{ refreshSugR(); }catch(e){}
   }
   function clientsFor(sm){
     var out = CL.open.filter(function(c){ return c.sm === sm; });
@@ -2971,6 +2971,44 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       if(b.id === 'iqUnlock'){ window.__openUnlock('Enter the team password to see ' + smEl.value + '’s clients.', function(){ sugForce = true; loadLockedClients().then(refreshSug); }); return; }
       var c = box._list && box._list[+b.getAttribute('data-i')]; if(!c) return;
       inp.value = c.c; box.hidden = true; sugForce = false;
+    });
+  })();
+
+
+  // same client picker for the Reminders form (clients of the chosen salesman, from the client master)
+  var sugForceR = false;
+  function refreshSugR(){
+    var box = document.getElementById('rmSug'), inp = document.getElementById('rmClient'), sm = document.getElementById('rmSm').value;
+    if(!box || (document.activeElement !== inp && !sugForceR)){ if(box) box.hidden = true; return; }
+    var q = normTxt(inp.value.trim());
+    if(!sugForceR && q.length < 1){ box.hidden = true; return; }
+    if(!sm){ box.innerHTML = '<div class="note">Choose the salesman first · اختر المندوب أولاً</div>'; box.hidden = false; return; }
+    if(PROTECTED_SM.indexOf(sm) !== -1 && !SEC.priv){
+      box.innerHTML = '<button type="button" id="rmUnlock">&#128274; Unlock with the team password to see ' + escapeHtml(sm) + '&rsquo;s clients</button>'; box.hidden = false; return;
+    }
+    if(PROTECTED_SM.indexOf(sm) !== -1 && !CL.locked){ box.innerHTML = '<div class="note">Loading clients…</div>'; box.hidden = false; return; }
+    var all = clientsFor(sm).slice().sort(function(x, y){ return x.c.localeCompare(y.c); });
+    var list = (q ? all.filter(function(c){ return matchClient(c.c, q); }) : all).slice(0, 80);
+    if(!list.length){ box.innerHTML = '<div class="note">No match in ' + escapeHtml(sm) + '&rsquo;s clients — you can still type a new client.</div>'; box.hidden = false; return; }
+    box.innerHTML = list.map(function(c, i){ return '<button type="button" data-i="' + i + '">' + escapeHtml(c.c) + '</button>'; }).join('');
+    box._list = list; box.hidden = false;
+  }
+  (function(){
+    var inp = document.getElementById('rmClient'), box = document.getElementById('rmSug'), smEl = document.getElementById('rmSm');
+    inp.addEventListener('input', function(){ sugForceR = false; refreshSugR(); });
+    document.getElementById('rmArrow').addEventListener('click', function(){ if(!box.hidden && sugForceR){ box.hidden = true; sugForceR = false; return; } sugForceR = true; refreshSugR(); });
+    inp.addEventListener('blur', function(){ setTimeout(function(){ if(document.activeElement !== inp){ box.hidden = true; sugForceR = false; } }, 180); });
+    smEl.addEventListener('change', function(){
+      inp.placeholder = smEl.value ? 'Choose from the list or type' : 'Choose salesman first'; sugForceR = false;
+      if(PROTECTED_SM.indexOf(smEl.value) !== -1) loadLockedClients();
+      box.hidden = true;
+    });
+    box.addEventListener('mousedown', function(ev){ ev.preventDefault(); });
+    box.addEventListener('click', function(ev){
+      var b = ev.target.closest('button'); if(!b) return;
+      if(b.id === 'rmUnlock'){ window.__openUnlock('Enter the team password to see ' + smEl.value + '’s clients.', function(){ sugForceR = true; loadLockedClients().then(refreshSugR); }); return; }
+      var c = box._list && box._list[+b.getAttribute('data-i')]; if(!c) return;
+      inp.value = c.c; box.hidden = true; sugForceR = false;
     });
   })();
 
