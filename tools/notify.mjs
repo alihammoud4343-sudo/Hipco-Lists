@@ -6,7 +6,7 @@ const APP_ID='9722a093-2b4b-4002-a1d8-bc4910456d78', KEY=process.env.ONESIGNAL_A
 if(!KEY){ console.log('No ONESIGNAL_API_KEY secret — nothing sent'); process.exit(0); }
 async function send(name,title,body){
   const r=await fetch('https://api.onesignal.com/notifications?c=push',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Key '+KEY},
-    body:JSON.stringify({app_id:APP_ID,target_channel:'push',filters:[{field:'tag',key:'salesman',relation:'=',value:name}],headings:{en:title},contents:{en:body},url:URL_})});
+    body:JSON.stringify({app_id:APP_ID,target_channel:'push',filters:[{field:'tag',key:'n_'+name,relation:'=',value:'1'}],headings:{en:title},contents:{en:body},url:URL_})});
   const t=await r.text(); console.log(name,r.status,t.slice(0,160)); return r.ok;
 }
 const [mode,a,b]=process.argv.slice(2);
@@ -21,6 +21,6 @@ if(mode==='new'){
     const title='New list '+d.reference.split('-')[0]+' · '+(d.quality_group||prod);
     for(const [name,n] of Object.entries(bd)){ if(!n) continue;
       await send(name,title,[d.type,d.qty_mt,d.gsm].filter(Boolean).join(' · ')+' — '+n+' of your clients matched'); }
-    await send('Ali',title+' (all)',(d.client_match_count||0)+' clients matched in total');
+    await send('Summary',title+' (summary)',[d.type,d.qty_mt].filter(Boolean).join(' · ')+' — '+(d.client_match_count||0)+' clients matched: '+Object.entries(bd).map(([k,v])=>k+' '+v).join(', '));
   }
 }
