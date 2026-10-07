@@ -47,5 +47,5 @@ end $f$;
 
 drop trigger if exists hipco_kv_alert on public.kv;
 create trigger hipco_kv_alert after insert or update on public.kv
-  for each row when (new.col in ('inquiries','reminders','sent','followup','stocklots'))
+  for each row when (new.col in ('inquiries','reminders','followup','stocklots'))   -- 'sent' (WhatsApp tick) deliberately NOT alerted: too many
   execute function public.hipco_kv_alert();
