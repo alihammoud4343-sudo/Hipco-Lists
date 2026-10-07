@@ -18,7 +18,13 @@ async function registered() {
   try { const r = await fetch(U + '/rest/v1/kv?select=id,data&col=eq.push&limit=1000', { headers: { apikey: K, 'x-hipco': C } }); if (r.ok) for (const x of await r.json()) { const d = x.data || {}; if (d.sid) regIds.push(d.sid); } } catch (e) {}
   regIds = [...new Set(regIds)]; note('registered-phones', regIds.length); return regIds;
 }
+async function logAlert(title, body) {   // keep a copy in the shared database so the app's bell shows the history
+  try { const at = Date.now(); await fetch(U + '/rest/v1/kv', { method: 'POST', headers: { apikey: K, 'x-hipco': C, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ col: 'alerts', id: String(at), data: { t: title, b: body, at } }) }); } catch (e) {}
+}
 export async function sendAll(title, body, url) {
+  const ok = await sendAll0(title, body, url); if (ok) await logAlert(title, body); return ok;
+}
+async function sendAll0(title, body, url) {
   const base = { headings: { en: title }, contents: { en: body }, url };
   const names = await segments(); const order = ['Total Subscriptions', 'Subscribed Users', 'Active Subscriptions', ...names.filter(n => /subscri/i.test(n))];
   let last = '';
