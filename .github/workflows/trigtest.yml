@@ -8,10 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Show latest alerts and inquiries
+      - name: Fake inquiry, then show what was saved
         run: |
           U=$(grep -o 'supabaseUrl: "[^"]*"' config.js | cut -d'"' -f2); K=$(grep -o 'anonKey: "[^"]*"' config.js | cut -d'"' -f2); C=$(grep -o 'dbCode: "[^"]*"' config.js | cut -d'"' -f2)
-          H=(-H "apikey: $K" -H "x-hipco: $C")
-          OUT=""; echo "::notice title=now::$(date -u +%H:%M:%S)"
-          echo "== alerts"; curl -s "${H[@]}" "$U/rest/v1/kv?select=id,data&col=eq.alerts&order=id.desc&limit=15" | python3 -c "import sys,json,datetime;print('::notice title=alerts::'+' ;; '.join(datetime.datetime.utcfromtimestamp(int(r['data']['at'])/1000).strftime('%H:%M:%S')+' '+r['data']['t']+' | '+r['data']['b'][:50].replace(chr(10),' / ') for r in json.load(sys.stdin)))"
-          echo "== inquiries"; curl -s "${H[@]}" "$U/rest/v1/kv?select=id,data&col=eq.inquiries&order=id.desc&limit=8" | python3 -c "import sys,json,datetime;print('::notice title=inquiries::'+' ;; '.join(r['id']+' '+datetime.datetime.utcfromtimestamp(int(r['data'].get('createdAt',0))/1000).strftime('%m-%d %H:%M:%S')+' '+str(r['data'].get('salesman'))+' '+str(r['data'].get('client'))+' '+str(r['data'].get('status')) for r in json.load(sys.stdin)))"
+          H=(-H "apikey: $K" -H "x-hipco: $C" -H "Content-Type: application/json")
+          R=$(curl -s -w " HTTP%{http_code}" "${H[@]}" -H "Prefer: resolution=merge-duplicates,return=minimal" -X POST "$U/rest/v1/kv" -d '{"col":"inquiries","id":"zz-test-inq2","data":{"no":"INQ-998","salesman":"Ahmad","client":"Dbouk International","product":"SBS 250gsm (TEST)","qty":"20 MT","country":"Lebanon","status":"open","createdAt":'$(date +%s000)'}}')
+          echo "::notice title=inquiry-write::$R"
+          sleep 10
+          curl -s "${H[@]}" "$U/rest/v1/kv?select=id,data&col=eq.alerts&order=id.desc&limit=5" | python3 -c "import sys,json,datetime;print('::notice title=alerts::'+' ;; '.join(datetime.datetime.utcfromtimestamp(int(r['data']['at'])/1000).strftime('%H:%M:%S')+' '+r['data']['t']+' | '+r['data']['b'][:60] for r in json.load(sys.stdin)))"
+          echo "::notice title=now::$(date -u +%H:%M:%S)"
+          sleep 100
+          curl -s -o /dev/null -w "del %{http_code}\n" "${H[@]}" -X DELETE "$U/rest/v1/kv?col=eq.inquiries&id=eq.zz-test-inq2"
