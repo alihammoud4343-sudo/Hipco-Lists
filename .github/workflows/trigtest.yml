@@ -12,6 +12,6 @@ jobs:
         run: |
           U=$(grep -o 'supabaseUrl: "[^"]*"' config.js | cut -d'"' -f2); K=$(grep -o 'anonKey: "[^"]*"' config.js | cut -d'"' -f2); C=$(grep -o 'dbCode: "[^"]*"' config.js | cut -d'"' -f2)
           H=(-H "apikey: $K" -H "x-hipco: $C")
-          echo "NOW $(date -u +%H:%M:%S)"
-          echo "== alerts"; curl -s "${H[@]}" "$U/rest/v1/kv?select=id,data&col=eq.alerts&order=id.desc&limit=15" | python3 -c "import sys,json,datetime;[print(datetime.datetime.utcfromtimestamp(int(r['data']['at'])/1000).strftime('%H:%M:%S'),r['data']['t'],'|',r['data']['b'][:70].replace('\n',' / ')) for r in json.load(sys.stdin)]"
-          echo "== inquiries"; curl -s "${H[@]}" "$U/rest/v1/kv?select=id,data&col=eq.inquiries&order=id.desc&limit=8" | python3 -c "import sys,json,datetime;[print(r['id'],datetime.datetime.utcfromtimestamp(int(r['data'].get('createdAt',0))/1000).strftime('%m-%d %H:%M:%S'),r['data'].get('salesman'),r['data'].get('client'),r['data'].get('status')) for r in json.load(sys.stdin)]"
+          OUT=""; echo "::notice title=now::$(date -u +%H:%M:%S)"
+          echo "== alerts"; curl -s "${H[@]}" "$U/rest/v1/kv?select=id,data&col=eq.alerts&order=id.desc&limit=15" | python3 -c "import sys,json,datetime;print('::notice title=alerts::'+' ;; '.join(datetime.datetime.utcfromtimestamp(int(r['data']['at'])/1000).strftime('%H:%M:%S')+' '+r['data']['t']+' | '+r['data']['b'][:50].replace(chr(10),' / ') for r in json.load(sys.stdin)))"
+          echo "== inquiries"; curl -s "${H[@]}" "$U/rest/v1/kv?select=id,data&col=eq.inquiries&order=id.desc&limit=8" | python3 -c "import sys,json,datetime;print('::notice title=inquiries::'+' ;; '.join(r['id']+' '+datetime.datetime.utcfromtimestamp(int(r['data'].get('createdAt',0))/1000).strftime('%m-%d %H:%M:%S')+' '+str(r['data'].get('salesman'))+' '+str(r['data'].get('client'))+' '+str(r['data'].get('status')) for r in json.load(sys.stdin)))"
