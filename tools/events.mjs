@@ -50,10 +50,8 @@ for (const c of COLS) for (const [k, { id, d }] of Object.entries(cur[c])) {
 }
 for (const [g, n] of Object.entries(sentG)) { const [sm, r] = g.split('|'); ev.push({ title: `${sm} sent ${r}`, body: `WhatsApp sent to ${n} client${n > 1 ? 's' : ''}` }); }
 for (const [g, n] of Object.entries(ansG)) { if (g.endsWith('|n')) continue; const [sm, r, st] = g.split('|'); const nt = ansG[g + '|n']; ev.push({ title: st === 'note' ? `${sm}: new note on ${r}` : `${sm}: ${n} client${n > 1 ? 's' : ''} ${st.replace(/_/g, ' ')} on ${r}`, body: nt ? nt.slice(0, 120) : 'Open the app for details' }); }
-async function push(title, body) {
-  const r = await fetch('https://api.onesignal.com/notifications?c=push', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Key ' + KEY }, body: JSON.stringify({ app_id: APP_ID, target_channel: 'push', included_segments: ['Subscribed Users'], headings: { en: title }, contents: { en: body }, url: SITE }) });
-  const t = await r.text(); note('push', r.status + ' ' + title + ' | ' + t.slice(0, 120)); return r.ok && !/"errors"/.test(t);
-}
+import { sendAll } from './pushlib.mjs';
+const push = (title, body) => sendAll(title, body, SITE);
 note('events', ev.length);
 let ok = true; const MAX = 6;
 for (const e of ev.slice(0, MAX)) ok = (await push(e.title, e.body)) && ok;

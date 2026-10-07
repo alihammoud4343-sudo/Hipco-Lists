@@ -16,7 +16,9 @@ async function pushRows(){
   console.log('::notice title=registered-phones::'+PUSH.length+' '+JSON.stringify(PUSH.map(x=>(x.data||{}).names)));
   return PUSH;
 }
+import { sendAll } from './pushlib.mjs';
 async function send(name,title,body){
+  if(name==='ALL') return sendAll(title,body,URL_);
   if(!name.startsWith('ID:')&&name!=='ALL'){
     const rows=await pushRows(), sids=[], oids=[];
     for(const x of rows){ const d=x.data||{}; if((d.names||[]).includes(name)){ if(d.sid) sids.push(d.sid); else if(d.oid) oids.push(d.oid); } }
