@@ -5,9 +5,28 @@ import fs from 'node:fs';
 const APP_ID='9722a093-2b4b-4002-a1d8-bc4910456d78', KEY=process.env.ONESIGNAL_API_KEY, URL_='https://alihammoud4343-sudo.github.io/Hipco-Lists/';
 console.log('::notice title=notify::key present='+(!!KEY)+' length='+(KEY||'').length+' prefix='+(KEY||'').slice(0,10));
 if(!KEY){ console.log('::error title=notify::No ONESIGNAL_API_KEY secret — nothing sent'); process.exit(1); }
+// phones registered in the shared database (col 'push'): names -> subscription ids
+let PUSH=null;
+async function pushRows(){
+  if(PUSH) return PUSH; PUSH=[];
+  try{
+    const cfg=fs.readFileSync('config.js','utf8'); const U=/supabaseUrl: "([^"]*)"/.exec(cfg)[1], K=/anonKey: "([^"]*)"/.exec(cfg)[1], C=/dbCode: "([^"]*)"/.exec(cfg)[1];
+    if(U){ const r=await fetch(U+'/rest/v1/kv?select=id,data&col=eq.push',{headers:{apikey:K,'x-hipco':C}}); if(r.ok) PUSH=await r.json(); }
+  }catch(e){}
+  console.log('::notice title=registered-phones::'+PUSH.length+' '+JSON.stringify(PUSH.map(x=>(x.data||{}).names)));
+  return PUSH;
+}
 async function send(name,title,body){
+  if(!name.startsWith('ID:')&&name!=='ALL'){
+    const rows=await pushRows(), sids=[], oids=[];
+    for(const x of rows){ const d=x.data||{}; if((d.names||[]).includes(name)){ if(d.sid) sids.push(d.sid); else if(d.oid) oids.push(d.oid); } }
+    if(sids.length||oids.length) return sendTo(name,{...(sids.length?{include_subscription_ids:[...new Set(sids)]}:{include_aliases:{onesignal_id:[...new Set(oids)]}})},title,body);
+  }
+  return sendTo(name,name.startsWith('ID:')?{include_aliases:{onesignal_id:[name.slice(3)]}}:name==='ALL'?{included_segments:['Subscribed Users']}:{filters:[{field:'tag',key:'n_'+name,relation:'=',value:'1'}]},title,body);
+}
+async function sendTo(name,target,title,body){
   const r=await fetch('https://api.onesignal.com/notifications?c=push',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Key '+KEY},
-    body:JSON.stringify({app_id:APP_ID,target_channel:'push',...(name.startsWith('ID:')?{include_aliases:{onesignal_id:[name.slice(3)]}}:name==='ALL'?{included_segments:['Subscribed Users']}:{filters:[{field:'tag',key:'n_'+name,relation:'=',value:'1'}]}),headings:{en:title},contents:{en:body},url:URL_})});
+    body:JSON.stringify({app_id:APP_ID,target_channel:'push',...target,headings:{en:title},contents:{en:body},url:URL_})});
   const t=await r.text(); console.log('::notice title=send-'+name+'::status '+r.status+' '+t.replace(/\n/g,' ').slice(0,200)); if(!r.ok||/"errors"/.test(t)){ process.exitCode=1; } return r.ok;
 }
 function buildMsg(d,name){

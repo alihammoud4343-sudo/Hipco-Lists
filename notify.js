@@ -6,12 +6,23 @@
   function set(v){ try{ localStorage.setItem(KEY,JSON.stringify(v)); }catch(e){} }
   var SUM='Summary';
   async function applyTags(OneSignal,sel){ var t={}; sel.forEach(function(n){ t['n_'+n]='1'; }); try{ await OneSignal.User.addTags(t); }catch(e){} for(var k in t){ try{ await OneSignal.User.addTag(k,t[k]); }catch(e){} } NAMES.concat([SUM]).forEach(function(n){ if(sel.indexOf(n)<0){ try{ OneSignal.User.removeTag('n_'+n); }catch(e){} } }); var got={}; try{ got=OneSignal.User.getTags()||{}; }catch(e){} return got; }
+  // also record this phone + its names in the shared database, so alerts reach it even if OneSignal tags don't save
+  async function register(OneSignal,sel){
+    try{
+      var C=window.HIPCO_CFG||{}; if(!C.supabaseUrl) return false;
+      var sid=(OneSignal.User.PushSubscription&&OneSignal.User.PushSubscription.id)||'', oid=OneSignal.User.onesignalId||'';
+      if(!sid&&!oid) return false;
+      var h={apikey:C.anonKey,'x-hipco':C.dbCode,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'};
+      var r=await fetch(C.supabaseUrl.replace(/\/$/,'')+'/rest/v1/kv',{method:'POST',headers:h,body:JSON.stringify({col:'push',id:sid||('u_'+oid),data:{names:sel,sid:sid,oid:oid,ua:navigator.userAgent.slice(0,80),at:Date.now()}})});
+      return r.ok;
+    }catch(e){ return false; }
+  }
   var ios=/iphone|ipad|ipod/i.test(navigator.userAgent), standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   OneSignalDeferred.push(async function(OneSignal){
     try{
       await OneSignal.init({appId:APP_ID,serviceWorkerPath:'Hipco-Lists/sw.js',serviceWorkerParam:{scope:'/Hipco-Lists/'},notifyButton:{enable:false}});
-      ready=true; var n=get(); if(n.length){ try{ await applyTags(OneSignal,n); }catch(e){} } paint();
+      ready=true; var n=get(); if(n.length){ try{ await applyTags(OneSignal,n); }catch(e){} try{ if(OneSignal.Notifications.permission) await register(OneSignal,n); }catch(e){} } paint();
     }catch(e){ sdkFailed=true; paint(); }
   });
   var s=document.createElement('script'); s.src='https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js'; s.defer=true; s.onerror=function(){ sdkFailed=true; paint(); }; document.head.appendChild(s);
@@ -55,8 +66,9 @@
           var ok=OneSignal.Notifications.permission;
           if(!ok){ msg.textContent='Notifications are blocked. Allow them in your phone Settings → Notifications → HIPCO, then try again.'; return; }
           var got=await applyTags(OneSignal,sel);
-          set(sel); paint(); msg.textContent='Done ✓ Alerts are on for: '+sel.join(', ')+'. (saved '+Object.keys(got).filter(function(k){return k.indexOf('n_')===0;}).length+' of '+sel.length+')';
-          setTimeout(function(){ back.remove(); },4000);
+          var reg=false; for(var t=0;t<6&&!reg;t++){ reg=await register(OneSignal,sel); if(!reg) await new Promise(function(r){ setTimeout(r,1000); }); }
+          set(sel); paint(); msg.textContent=(reg?'Done ✓ Alerts are on for: ':'Saved on this phone, but not yet registered — reopen the app and try again: ')+sel.join(', ')+(reg?' (registered ✓)':'');
+          setTimeout(function(){ back.remove(); },6000);
         }catch(e){ msg.textContent='Something went wrong. Close and try again.'; }
       });
     };
