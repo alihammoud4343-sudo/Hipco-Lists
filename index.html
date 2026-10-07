@@ -3054,17 +3054,18 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
 
 
   // ---------- Quality picker (all qualities, still free to type) ----------
-  var QUALS = [
+  var QUALS = [   // ordered from the most important / most traded down to the rarest
     ['FBB','Folding Box Board','كرتون أبيض مطوي'], ['SBS','Solid Bleached Sulphate','كرتون أبيض مصنفر'],
+    ['UWF','Uncoated Woodfree','ورق أبيض غير مطلي'], ['CWF','Coated Woodfree / Two-Side Coated','كوشيه / ورق أبيض مطلي'],
     ['CKB','Coated Kraft Back','كرتون خلفية كرافت'], ['WLC','White-Lined Chipboard / Duplex Board','كرتون خلفية مبيضة / دوبلكس'],
-    ['GB','Greyboard','كرتون رمادي'], ['PE','PE Coated Cupstock','ورق أكواب مطلي'],
-    ['KL','Kraftliner','كرافت لاينر'], ['TL','Testliner','تستلاينر'], ['FL','Fluting','فلوتنغ'], ['WTTL','White Top Testliner','تستلاينر وجه ابيض'],
-    ['SK','Sack / MG / MF Kraft','ورق كرافت أكياس'],
-    ['UWF','Uncoated Woodfree','ورق أبيض غير مطلي'], ['CWF','Coated Woodfree','ورق أبيض مطلي'], ['BK','Book Paper - Bulky','ورق كتب بالكي'],
-    ['NP','Newsprint & Mechanical','ورق جريدة'], ['UCO','Uncoated Cream Offset','ورق شاموا وكريم'], ['A4','Copy Paper','ورق تصوير'],
-    ['NCR','Carbonless Paper','ورق فواتير'], ['TS','Tissue','ورق مناديل'], ['LB','Label','ورق ملصقات'], ['STK','Stickers','ملصقات لاصقة'],
+    ['GB','Greyboard','كرتون رمادي'], ['KL','Kraftliner','كرافت لاينر'], ['TL','Testliner','تستلاينر'],
+    ['WTTL','White Top Testliner','تستلاينر وجه ابيض'], ['FL','Fluting','فلوتنغ'], ['NP','Newsprint & Mechanical','ورق جريدة'],
+    ['UCO','Uncoated Cream Offset','ورق شاموا وكريم'], ['BK','Book Paper - Bulky','ورق كتب بالكي'], ['A4','Copy Paper','ورق تصوير'],
+    ['PE','PE Coated Cupstock','ورق أكواب مطلي'], ['SK','Sack / MG / MF Kraft','ورق كرافت أكياس'], ['NCR','Carbonless Paper','ورق فواتير'],
+    ['LB','Label','ورق ملصقات'], ['TS','Tissue','ورق مناديل'], ['STK','Stickers','ملصقات لاصقة'],
     ['Sec','Security Paper','ورق أمني'], ['LP','Luxury Paper','ورق فاخر']
   ];
+
   (function(){
     var inp = document.getElementById('iqProduct'), box = document.getElementById('iqProdSug'), arrow = document.getElementById('iqProdArrow'), force = false;
     function show(){
