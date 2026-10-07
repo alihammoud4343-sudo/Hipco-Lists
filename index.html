@@ -3072,6 +3072,15 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       var q = normTxt(inp.value.trim());
       if(!force && !q){ box.hidden = true; return; }
       var list = QUALS.filter(function(x){ return !q || normTxt(x[0] + ' ' + x[1] + ' ' + x[2]).indexOf(q) !== -1; });
+      // the order learns from real use: base importance (list order) + 2 points for every past inquiry that asked for that quality
+      var use = {}; try{ (inqDocs || []).forEach(function(d){
+        var t = ' ' + normTxt(d.product || '') + ' ';
+        QUALS.forEach(function(x, i){ if(t.indexOf(' ' + normTxt(x[0]) + ' ') !== -1 || t.indexOf('(' + normTxt(x[0]) + ')') !== -1 || t.indexOf(normTxt(x[1])) !== -1) use[i] = (use[i] || 0) + 1; });
+      }); }catch(e){}
+      list = list.slice().sort(function(a, b){
+        var ia = QUALS.indexOf(a), ib = QUALS.indexOf(b);
+        return ((QUALS.length - ib) + 2 * (use[ib] || 0)) - ((QUALS.length - ia) + 2 * (use[ia] || 0));
+      });
       if(!list.length){ box.hidden = true; return; }
       box.innerHTML = list.map(function(x, i){ return '<button type="button" data-i="' + QUALS.indexOf(x) + '">' + escapeHtml(x[1]) + ' <b>(' + escapeHtml(x[0]) + ')</b> <span dir="rtl" style="font-family:var(--f-arabic);color:var(--ink-2);font-size:13px">' + escapeHtml(x[2]) + '</span></button>'; }).join('');
       box.hidden = false;
