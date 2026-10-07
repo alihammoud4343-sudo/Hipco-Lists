@@ -1187,6 +1187,9 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   // Arabic offer line: quality - rolls/sheets - from..to grammage - tons combined
   function arOfferLine(d){
     var q = AR_QUALITY[d.quality_group] || d.product || '';
+
+    // Duplex with GREY back only (e.g. "Duplexboard Grey Back") -> exactly this wording, never the generic mixed-backs line
+    if(d.quality_group === 'Duplex Board' && /grey\s*back|(^|[^A-Za-z0-9])GB([^A-Za-z0-9]|$)/i.test((d.product||'') + ' ' + (d.reference||''))){ q = 'دوبلكس خلفية رمادي'; }
     // 2 coated sides (2CS) + white woodfree in one list -> "كوشيه و ورق ابيض"
     var hay = (d.product || '') + ' ' + (d.reference || '');
     if(/(^|[^A-Za-z0-9])2CS([^A-Za-z0-9]|$)/i.test(hay)){
