@@ -18,6 +18,8 @@
   var statJson = '';
   var loadErr = false;
 
+  // every network call gets a time limit, so a slow phone network can never leave the app stuck on the loading screen
+  function tfetch(url, opt, ms){ opt = opt || {}; var c = new AbortController(), t = setTimeout(function(){ c.abort(); }, ms || 10000); opt.signal = c.signal; return fetch(url, opt).finally(function(){ clearTimeout(t); }); }
   function clone(o){ return o == null ? o : JSON.parse(JSON.stringify(o)); }
   function lsGet(){ try{ return JSON.parse(localStorage.getItem(LS) || 'null'); }catch(e){ return null; } }
   function lsSet(){ try{ localStorage.setItem(LS, JSON.stringify(dyn)); }catch(e){} }
@@ -58,7 +60,7 @@
     });
   }
   async function gate(){
-    var r = await fetch('data/crypto.json?t=' + Date.now(), { cache: 'no-store' });
+    var r = await tfetch('data/crypto.json?t=' + Date.now(), { cache: 'no-store' });
     if(!r.ok) throw new Error('crypto');
     cmeta = await r.json();
     var pw = ''; try{ pw = localStorage.getItem(PW_STORE) || ''; }catch(e){}
@@ -77,7 +79,7 @@
     return h;
   }
   async function rest(path, opt){
-    var r = await fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/rest/v1/' + path, opt);
+    var r = await tfetch(CFG.supabaseUrl.replace(/\/$/, '') + '/rest/v1/' + path, opt, 8000);
     if(r.status === 401 || r.status === 403){
       var e = new Error('team code rejected'); e.code = 'denied'; throw e;
     }
@@ -117,11 +119,11 @@
 
   // ---------- loading ----------
   async function loadStatic(){
-    var r = await fetch('data/vault.json?t=' + Date.now(), { cache: 'no-store' });
+    var r = await tfetch('data/vault.json?t=' + Date.now(), { cache: 'no-store' }, 12000);
     if(!r.ok) throw new Error('static load');
     var t = await r.text();
     if(t === statJson) return false;
-    if(!cmeta){ var rc = await fetch('data/crypto.json?t=' + Date.now(), { cache: 'no-store' }); if(rc.ok) cmeta = await rc.json(); }
+    if(!cmeta){ var rc = await tfetch('data/crypto.json?t=' + Date.now(), { cache: 'no-store' }); if(rc.ok) cmeta = await rc.json(); }
     var p = JSON.parse(t);
     statJson = t;
     stat.stocklots = p.docs || [];
@@ -227,14 +229,20 @@
     try{
       var changed = false;
       try{ changed = await loadStatic(); if(loadErr){ loadErr = false; seedLocal(); changed = true; } }catch(e){ if(first) throw e; }
-      if(REMOTE){ try{ if(await loadRemote()) changed = true; }catch(e){ if(e.code === 'denied'){ subs.forEach(function(s){ if(s.err) s.err({ code: 'denied' }); }); } } }
+      if(REMOTE){ try{ if(await loadRemote()){ changed = true; lsSet(); } }catch(e){ if(e.code === 'denied'){ subs.forEach(function(s){ if(s.err) s.err({ code: 'denied' }); }); } } }
       if(changed || first) fire();
     }catch(e){ subs.forEach(function(s){ if(s.err) s.err({ code: 'load' }); }); }
+  }
+  // the app opens as soon as the lists are loaded; the shared ticks load in the background (last saved ticks show instantly)
+  async function remoteStart(){
+    try{ await seedRemoteOnce(); await loadRemote(); lsSet(); }
+    catch(e){ if(window.console) console.error(e); var n = 0; DYN.forEach(function(c){ n += Object.keys(dyn[c] || {}).length; }); if(!n) seedLocal(); }
+    fire();
   }
   var ready = (async function(){
     try{
       try{ await loadStatic(); }catch(e){ loadErr = true; throw e; }
-      if(REMOTE){ try{ await seedRemoteOnce(); await loadRemote(); }catch(e){ if(window.console) console.error(e); seedLocal(); } } else seedLocal();
+      if(REMOTE){ var have = lsGet(); if(have) DYN.forEach(function(c){ if(have[c]) dyn[c] = have[c]; }); remoteStart(); } else seedLocal();
     }catch(e){ if(window.console) console.error(e); subs.forEach(function(x){ if(x.err) x.err({ code: 'load' }); }); }
     fire();
     setInterval(function(){ refresh(false); }, REMOTE ? 8000 : 60000);

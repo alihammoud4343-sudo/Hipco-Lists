@@ -59,8 +59,7 @@ if(mode==='new'){
   const fresh=(cur.docs||[]).filter(d=>!seen.has(d.reference));
   console.log('new lists:',fresh.map(d=>d.reference).join(', ')||'none');
   for(const d of fresh){
-    const bd=d.client_match_breakdown||{};
-    for(const [name,n] of Object.entries(bd)){ if(!n) continue; const mm=buildMsg(d,name); await send(name,mm.title,mm.body); }
-    const mm=buildMsg(d,'Summary'); await send('Summary',mm.title+' (summary)',mm.body);
+    // one alert to EVERYONE who has the app (all subscribed phones) — no names, no per-person setup
+    const mm=buildMsg(d,'Summary'); await send('ALL',mm.title,mm.body);
   }
 }
