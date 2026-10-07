@@ -14,6 +14,5 @@ rebuilt with tools/build_vault.mjs and pushed; each list's PDF sits next to inde
 ## Matching exclusions (standing rules)
 - **Rikabi carton & paper** (client of Ouseili) must never be matched on lists from **Opti (O)** or **Khalil Zein (K / KZ)**, even if his interests match. Applies to every new list from those suppliers (decided by Ali, 7 Oct 2026).
 
-## Client line picking (tap-to-select page)
-Every tickable stocklot PDF carries a yellow "Can't tick? TAP HERE" link to `pick.html?ref=SLnnn`, where the client taps the numbered lines (they turn yellow) and sends the selection back on WhatsApp.
-For every new PDF run, in this order: `python3 tools/extract_lines.py` (rebuilds `data/lines.json`, which pick.html reads — run it BEFORE the next step, because that step removes the heading boxes the extractor reads) and then `python3 tools/add_pick_link.py` (button + removes heading tick boxes, safe to re-run). Commit the PDFs and `data/lines.json` together.
+## Client line picking
+PDFs are tickable forms (one box next to each numbered line, none next to quality headings). The yellow "TAP HERE" button was removed on request (`tools/remove_pick_button.py`); the tap-to-select page `pick.html` + `data/lines.json` still exist but are not linked from the PDFs.
