@@ -1225,7 +1225,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(ref) urls.push(PDF_RAW + pdfFileName(ref));
     if(fallbackUrl) urls.push(fallbackUrl);
     for(var i = 0; i < urls.length; i++){
-      try{ var r = await fetch(urls[i]); if(r.ok){ var b = await r.blob(); if(b && b.size > 1000){ var hd = new Uint8Array(await b.slice(0,5).arrayBuffer()); if(String.fromCharCode.apply(null, hd).indexOf('%PDF') === 0) return new Blob([b], { type:'application/pdf' }); } } }catch(e){}
+      try{ var r = await fetch(urls[i], { cache: "no-cache" }); if(r.ok){ var b = await r.blob(); if(b && b.size > 1000){ var hd = new Uint8Array(await b.slice(0,5).arrayBuffer()); if(String.fromCharCode.apply(null, hd).indexOf('%PDF') === 0) return new Blob([b], { type:'application/pdf' }); } } }catch(e){}
     }
     throw new Error('pdf unavailable');
   }
