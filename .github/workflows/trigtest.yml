@@ -8,10 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - name: Remove wrongly timed backfill row, then add it at the real time
+      - name: Fake reminder (new, done, deleted) to test alerts and the bell
         run: |
           U=$(grep -o 'supabaseUrl: "[^"]*"' config.js | cut -d'"' -f2); K=$(grep -o 'anonKey: "[^"]*"' config.js | cut -d'"' -f2); C=$(grep -o 'dbCode: "[^"]*"' config.js | cut -d'"' -f2)
-          curl -s -o /dev/null -w "del %{http_code}\n" -H "apikey: $K" -H "x-hipco: $C" -X DELETE "$U/rest/v1/kv?col=eq.alerts&id=eq.1791366360000"
-          node tools/backfill_alert.mjs SL124 1791369960000
+          H=(-H "apikey: $K" -H "x-hipco: $C" -H "Content-Type: application/json")
+          post(){ curl -s -o /dev/null -w "%{http_code}\n" "${H[@]}" -H "Prefer: resolution=merge-duplicates,return=minimal" -X POST "$U/rest/v1/kv" -d "$1"; }
+          post '{"col":"reminders","id":"zz-test-rem3","data":{"salesman":"Ahmad","client":"Dbouk International","note":"TEST","status":"open","createdAt":1}}'
+          sleep 8
+          post '{"col":"reminders","id":"zz-test-rem3","data":{"salesman":"Ahmad","client":"Dbouk International","note":"TEST","status":"done","createdAt":1}}'
+          sleep 8
+          curl -s -o /dev/null -w "del %{http_code}\n" "${H[@]}" -X DELETE "$U/rest/v1/kv?col=eq.reminders&id=eq.zz-test-rem3"
