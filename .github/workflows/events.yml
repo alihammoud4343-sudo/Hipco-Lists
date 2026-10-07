@@ -1,0 +1,17 @@
+name: Alerts for everything
+on:
+  schedule: [{ cron: '*/5 * * * *' }]
+  workflow_dispatch:
+  push:
+    paths: ['tools/events_run.json']
+concurrency: { group: events, cancel-in-progress: false }
+jobs:
+  events:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Send alerts for new inquiries, reminders, sends, answers
+        env: { ONESIGNAL_API_KEY: '${{ secrets.ONESIGNAL_API_KEY }}' }
+        run: node tools/events.mjs
