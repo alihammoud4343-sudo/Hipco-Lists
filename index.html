@@ -4,6 +4,17 @@
 <meta name="theme-color" content="#0B1A3F"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="HIPCO"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>html{background:#0B1A3F}#splash{position:fixed;inset:0;z-index:99998;background:linear-gradient(160deg,#27499A,#0B1A3F);display:flex;flex-direction:column;align-items:center;justify-content:center}#splash img{width:min(240px,64vw)}#splash i{margin-top:22px;width:26px;height:26px;border:3px solid #ffffff44;border-top-color:#fff;border-radius:50%;animation:spl .8s linear infinite}@keyframes spl{to{transform:rotate(360deg)}}*,*::before,*::after{box-sizing:border-box}html,body{margin:0}body{-webkit-text-size-adjust:100%}.hero{padding-top:calc(22px + env(safe-area-inset-top,0px))!important}.home{padding-top:calc(36px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))!important}.home{top:0!important;left:0!important;right:0!important;bottom:auto!important;height:100vh!important;height:100lvh!important;min-height:-webkit-fill-available}html:has(#homeScreen:not([hidden])),html:has(#homeScreen:not([hidden])) body{background:#0B1A3F!important}.home>:first-child{margin-top:auto!important}.home>:last-child{margin-bottom:auto!important}.home{padding-top:calc(24px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}</style>
+<style>
+/* bigger blue dropdown arrows (easy to tap) */
+select{ -webkit-appearance:none !important; appearance:none !important; min-height:46px; padding-right:52px !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Ccircle cx='18' cy='18' r='17' fill='%23DCE6F8'/%3E%3Cpath d='M10.5 14.5 18 22l7.500-7.500' fill='none' stroke='%231F4283' stroke-width='3.600' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat:no-repeat !important; background-position:right 8px center !important; background-size:34px 34px !important; }
+.iq-arrow{ width:44px !important; height:44px !important; right:2px !important; bottom:1px !important; color:#1F4283 !important; }
+.iq-arrow svg{ width:26px !important; height:26px !important; stroke-width:3 !important; }
+.inq-types.locked label{ opacity:.4; }
+.inq-types.locked label:has(input:checked){ opacity:1; border-color:#1F4283; background:#E4ECFA; font-weight:700; }
+.iq-tnote{ margin-top:6px; font-size:12.5px; color:#1F4283; font-weight:600; }
+</style>
 </head><body>
 <div id="splash"><img src="img/logo-white.png" alt="HIPCO"><i></i></div>
 <script>(function(){try{var d=document.createElement('div');d.style.cssText='position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top,0px)';document.documentElement.appendChild(d);var v=parseFloat(getComputedStyle(d).paddingTop)||0;d.remove();
@@ -827,10 +838,15 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     </div>
     <div class="inq-field full" style="margin-bottom:12px"><label><span>Client type</span><span class="ar">نوع العميل</span></label>
       <div class="inq-types" id="iqTypes">
-        <label><input type="radio" name="iqType" value="Factory"> Factory <span dir="rtl" style="font-family:var(--f-arabic)">معمل</span></label>
-        <label><input type="radio" name="iqType" value="Trader"> Trader <span dir="rtl" style="font-family:var(--f-arabic)">تاجر</span></label>
         <label><input type="radio" name="iqType" value="Printing press"> Printing press <span dir="rtl" style="font-family:var(--f-arabic)">مطبعة</span></label>
-      </div></div>
+        <label><input type="radio" name="iqType" value="Publisher"> Publisher <span dir="rtl" style="font-family:var(--f-arabic)">دار نشر</span></label>
+        <label><input type="radio" name="iqType" value="Trader"> Trader <span dir="rtl" style="font-family:var(--f-arabic)">تاجر</span></label>
+        <label><input type="radio" name="iqType" value="Notebooks"> Notebooks <span dir="rtl" style="font-family:var(--f-arabic)">دفاتر</span></label>
+        <label><input type="radio" name="iqType" value="Packaging"> Packaging <span dir="rtl" style="font-family:var(--f-arabic)">تغليف</span></label>
+        <label><input type="radio" name="iqType" value="Library"> Library <span dir="rtl" style="font-family:var(--f-arabic)">مكتبة</span></label>
+        <label><input type="radio" name="iqType" value="Newsprint"> Newsprint <span dir="rtl" style="font-family:var(--f-arabic)">جرائد</span></label>
+        <label><input type="radio" name="iqType" value="Factory"> Factory <span dir="rtl" style="font-family:var(--f-arabic)">معمل</span></label>
+      </div><div class="iq-tnote" id="iqTypeNote" hidden>&#128274; Taken from the client master &middot; من قائمة العملاء</div></div>
     <div class="inq-field full"><label for="iqComments"><span>Comments</span><span class="ar">تعليقات</span></label><textarea id="iqComments"></textarea></div>
     <button type="submit" class="inq-send" id="iqSend">Send inquiry &middot; إرسال الطلب</button>
     <button type="button" class="iq-cancel" id="iqCancel" hidden onclick="__inqEditCancel()">Cancel edit &middot; إلغاء التعديل</button>
@@ -2653,6 +2669,16 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var max = 0; inqDocs.forEach(function(d){ var n = parseInt(d.no, 10); if(n > max) max = n; });
     return max + 1;
   }
+  // client type comes from the client master: picking a known client ticks his type and locks it
+  window.__iqApplyType = function(c){
+    var radios = document.querySelectorAll('input[name=iqType]'), box = document.getElementById('iqTypes'), note = document.getElementById('iqTypeNote');
+    var t = c && c.t ? String(c.t).toLowerCase() : '', found = false;
+    if(t) Array.prototype.forEach.call(radios, function(r){ if(r.value.toLowerCase() === t){ r.checked = true; found = true; } });
+    var wasLocked = box.classList.contains('locked');
+    if(!found && wasLocked) Array.prototype.forEach.call(radios, function(r){ r.checked = false; });
+    Array.prototype.forEach.call(radios, function(r){ r.disabled = found; if(found && r.value.toLowerCase() !== t) r.checked = false; });
+    box.classList.toggle('locked', found); if(note) note.hidden = !found;
+  };
   function inqFormReset(clearAll){
     document.getElementById('iqDate').value = todayKey();
     document.getElementById('iqNo').value = 'INQ-' + pad3(nextInqNo());
@@ -2660,6 +2686,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       ['iqClient','iqProduct','iqQty','iqSize','iqGsm','iqCountry','iqComments'].forEach(function(id){ document.getElementById(id).value = ''; }); __iqSizeLoad(); document.getElementById('iqQty').dataset.auto='';
       iqRows = []; renderIqRows();
       Array.prototype.forEach.call(document.querySelectorAll('input[name=iqType]'), function(r){ r.checked = false; });
+      window.__iqApplyType(null);
     }
   }
   var INQ_STATUS = {
@@ -2974,7 +3001,13 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       var b = ev.target.closest('button'); if(!b) return;
       if(b.id === 'iqUnlock'){ window.__openUnlock('Enter the team password to see ' + smEl.value + '’s clients.', function(){ sugForce = true; loadLockedClients().then(refreshSug); }); return; }
       var c = box._list && box._list[+b.getAttribute('data-i')]; if(!c) return;
-      inp.value = c.c; box.hidden = true; sugForce = false;
+      inp.value = c.c; box.hidden = true; sugForce = false; window.__iqApplyType(c);
+    });
+    // typing the full name of a known client also picks his type; any other text frees the type again
+    inp.addEventListener('input', function(){
+      var k = clientKey({ company: inp.value }), hit = null;
+      clientsFor(smEl.value).forEach(function(c){ if(clientKey({ company: c.c }) === k) hit = c; });
+      window.__iqApplyType(hit);
     });
   })();
 
