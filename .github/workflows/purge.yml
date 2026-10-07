@@ -1,0 +1,20 @@
+name: Remove lists from the shared database
+on:
+  push:
+    paths: ['tools/purge.json']
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: |
+          node -e "
+          const fs=require('fs');const cfg=fs.readFileSync('config.js','utf8');
+          const U=/supabaseUrl: \"([^\"]*)\"/.exec(cfg)[1],K=/anonKey: \"([^\"]*)\"/.exec(cfg)[1],C=/dbCode: \"([^\"]*)\"/.exec(cfg)[1];
+          const P=JSON.parse(fs.readFileSync('tools/purge.json','utf8')).prefixes;
+          (async()=>{for(const col of ['sent','followup','inquiries','stocklots','reminders'])for(const p of P){
+            const r=await fetch(U+'/rest/v1/kv?col=eq.'+col+'&id=like.'+encodeURIComponent(p+'*'),{method:'DELETE',headers:{apikey:K,'x-hipco':C,Prefer:'return=representation'}});
+            const t=await r.text();let n='?';try{n=JSON.parse(t).length}catch{}
+            console.log('::notice title=purge-'+col+'-'+p.slice(0,5)+'::'+r.status+' deleted '+n);}})();"
