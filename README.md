@@ -16,4 +16,4 @@ rebuilt with tools/build_vault.mjs and pushed; each list's PDF sits next to inde
 
 ## Client line picking (tap-to-select page)
 Every tickable stocklot PDF carries a yellow "Can't tick? TAP HERE" link to `pick.html?ref=SLnnn`, where the client taps the numbered lines (they turn yellow) and sends the selection back on WhatsApp.
-For every new PDF run, in this order: `python3 tools/add_pick_link.py` (adds the link, safe to re-run) and `python3 tools/extract_lines.py` (rebuilds `data/lines.json`, which pick.html reads). Commit the PDFs and `data/lines.json` together.
+For every new PDF run, in this order: `python3 tools/extract_lines.py` (rebuilds `data/lines.json`, which pick.html reads — run it BEFORE the next step, because that step removes the heading boxes the extractor reads) and then `python3 tools/add_pick_link.py` (button + removes heading tick boxes, safe to re-run). Commit the PDFs and `data/lines.json` together.
