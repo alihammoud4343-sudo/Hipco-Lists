@@ -1,7 +1,7 @@
 // Notification bell: shows the history of every alert ("5 min ago · Ahmad sent SL124 ..."), with an unread badge.
 (function(){
   var CFG = window.HIPCO_CFG || {}; if(!CFG.supabaseUrl) return;
-  var SEEN = 'hipco_bell_seen', items = [], open = false, timer = null;
+  var SEEN = 'hipco_bell_seen', items = [], open = false, timer = null, armAll = false, armTimer = null;
   function lsg(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
   function lss(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -12,7 +12,14 @@
     var h = Math.round(m / 60); if(h < 24) return h + (h === 1 ? ' hour ago' : ' hours ago');
     var d = Math.round(h / 24); return d + (d === 1 ? ' day ago' : ' days ago');
   }
-  function when(ms){ try{ return new Date(ms).toLocaleString([], { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); }catch(e){ return ''; } }
+  function when(ms){
+    try{
+      var d = new Date(ms), n = new Date(), tm = d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
+      var sd = function(x){ return x.getFullYear() + '-' + x.getMonth() + '-' + x.getDate(); }, y = new Date(n.getTime() - 86400000);
+      if(sd(d) === sd(n)) return 'Today, ' + tm; if(sd(d) === sd(y)) return 'Yesterday, ' + tm;
+      return d.toLocaleDateString('en-US', { day:'numeric', month:'short' }) + ', ' + tm;
+    }catch(e){ return ''; }
+  }
   function icon(t){
     t = (t || '').toLowerCase();
     if(/inquiry/.test(t)) return '❓'; if(/reminder/.test(t)) return '⏰'; if(/deleted|removed/.test(t)) return '🗑️';
@@ -37,11 +44,17 @@
     var el = document.getElementById('bellList'); if(!el) return;
     if(!items.length){ el.innerHTML = '<div style="text-align:center;color:var(--ink-2);padding:48px 12px;font-size:13px">No notifications yet.<br>Every new list, inquiry, reminder and update will appear here.</div>'; return; }
     var seen = +lsg(SEEN) || 0;
-    el.innerHTML = items.map(function(x){
+    el.innerHTML = '<div style="display:flex;justify-content:flex-end;padding:8px 0 0"><button type="button" id="bellClear" style="border:1px solid var(--line);background:transparent;color:var(--sold);font:600 12.5px var(--f-body);border-radius:999px;padding:7px 14px;cursor:pointer">' + (armAll ? 'Tap again to delete all' : 'Clear all') + '</button></div>' + items.map(function(x){
       return '<div style="display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)"><div style="flex:none;font-size:20px;width:28px;text-align:center">' + icon(x.t) + '</div><div style="min-width:0;flex:1"><div style="font-weight:700;font-size:14px;line-height:1.35">' + esc(x.t) + (x.at > seen ? ' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E5484D;vertical-align:1px"></span>' : '') + '</div>' +
         (x.b ? '<div style="font-size:13px;color:var(--ink);margin-top:2px;line-height:1.45;word-break:break-word;white-space:pre-line">' + esc(x.b) + '</div>' : '') +
-        '<div style="font-size:11.5px;color:var(--ink-2);margin-top:4px">' + ago(x.at) + ' · ' + when(x.at) + '</div></div></div>';
+        '<div style="font-size:11.5px;color:var(--ink-2);margin-top:4px">' + ago(x.at) + ' · ' + when(x.at) + '</div></div><button type="button" data-del="' + esc(x.id) + '" aria-label="Delete notification" style="flex:none;align-self:flex-start;border:0;background:var(--chip);color:var(--ink-2);width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg></button></div>';
     }).join('');
+  }
+  function hdrs(){ var h = { apikey: CFG.anonKey, 'x-hipco': CFG.dbCode || '', 'Content-Type': 'application/json' }; if(!/^sb_/.test(CFG.anonKey)) h.Authorization = 'Bearer ' + CFG.anonKey; return h; }
+  async function del(id){   // id === null -> delete every notification
+    var u = CFG.supabaseUrl.replace(/\/$/, '') + '/rest/v1/kv?col=eq.alerts' + (id ? '&id=eq.' + encodeURIComponent(id) : '');
+    items = id ? items.filter(function(x){ return x.id !== id; }) : []; badge(); draw();
+    try{ await fetch(u, { method: 'DELETE', headers: hdrs() }); }catch(e){}
   }
   async function load(){
     try{
@@ -49,7 +62,7 @@
       var c = new AbortController(), t = setTimeout(function(){ c.abort(); }, 8000);
       var r = await fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/rest/v1/kv?select=id,data&col=eq.alerts&order=id.desc&limit=80', { headers: h, signal: c.signal }); clearTimeout(t);
       if(!r.ok) return; var rows = await r.json();
-      items = rows.map(function(x){ var d = x.data || {}; return { t: d.t || '', b: d.b || '', at: +d.at || +x.id || 0 }; }).filter(function(x){ return x.at; }).sort(function(a, b){ return b.at - a.at; });
+      items = rows.map(function(x){ var d = x.data || {}; return { id: x.id, t: d.t || '', b: d.b || '', at: +d.at || +x.id || 0 }; }).filter(function(x){ return x.at; }).sort(function(a, b){ return b.at - a.at; });
       badge(); if(open) draw();
     }catch(e){}
   }
@@ -59,7 +72,11 @@
     var bar = document.querySelector('.hero-actions'); if(!bar || document.getElementById('bellBtn')) return;
     bar.insertBefore(btn, bar.firstChild); document.body.appendChild(panel);
     btn.addEventListener('click', show);
-    panel.addEventListener('click', function(e){ if(e.target === panel || e.target.id === 'bellX') hide(); });
+    panel.addEventListener('click', function(e){
+      if(e.target === panel || e.target.id === 'bellX'){ hide(); return; }
+      var b = e.target.closest ? e.target.closest('[data-del]') : null; if(b){ del(b.getAttribute('data-del')); return; }
+      if(e.target.id === 'bellClear'){ if(armAll){ armAll = false; clearTimeout(armTimer); del(null); } else { armAll = true; draw(); armTimer = setTimeout(function(){ armAll = false; draw(); }, 4000); } }
+    });
     load(); setInterval(function(){ if(!open) load(); }, 60000);
     document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
     if(!+lsg(SEEN)) lss(SEEN, '0');
