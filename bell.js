@@ -39,7 +39,7 @@
     var seen = +lsg(SEEN) || 0;
     el.innerHTML = items.map(function(x){
       return '<div style="display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)"><div style="flex:none;font-size:20px;width:28px;text-align:center">' + icon(x.t) + '</div><div style="min-width:0;flex:1"><div style="font-weight:700;font-size:14px;line-height:1.35">' + esc(x.t) + (x.at > seen ? ' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E5484D;vertical-align:1px"></span>' : '') + '</div>' +
-        (x.b ? '<div style="font-size:13px;color:var(--ink);margin-top:2px;line-height:1.4;word-break:break-word">' + esc(x.b) + '</div>' : '') +
+        (x.b ? '<div style="font-size:13px;color:var(--ink);margin-top:2px;line-height:1.45;word-break:break-word;white-space:pre-line">' + esc(x.b) + '</div>' : '') +
         '<div style="font-size:11.5px;color:var(--ink-2);margin-top:4px">' + ago(x.at) + ' · ' + when(x.at) + '</div></div></div>';
     }).join('');
   }

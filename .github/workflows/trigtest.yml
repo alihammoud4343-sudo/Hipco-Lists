@@ -16,3 +16,5 @@ jobs:
           post '{"col":"reminders","id":"zz-test-rem2","data":{"salesman":"Ahmad","client":"Dbouk International","note":"TEST delete alert","status":"open","createdAt":'$(date +%s000)'}}'
           sleep 10
           curl -s -o /dev/null -w "del %{http_code}\n" "${H[@]}" -X DELETE "$U/rest/v1/kv?col=eq.reminders&id=eq.zz-test-rem2"
+      - name: Backfill SL124 alert into bell
+        run: node tools/backfill_alert.mjs SL124 1791366360000
