@@ -342,7 +342,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .sp-text .sp-left{ color:var(--amber,#B7791F); font-weight:600; }
   .sp-text .sp-done{ color:var(--good); font-weight:700; }
   .sp-text b{ color:var(--ink); font-family:var(--f-data); font-size:20px; }
-  .sent-fact{ color:var(--good); font-weight:600; }
+  .sent-fact{ --c:#16875A; --f:rgba(22,135,90,.28); position:relative; display:inline-block; padding:4px 11px; border-radius:999px; border:1.5px solid var(--c); font-size:13px; font-weight:600; color:var(--ink); background:linear-gradient(90deg,var(--f) var(--p),transparent var(--p)); white-space:nowrap; }
+  .sent-fact b{ font-weight:800; color:var(--c); font-size:14px; }
+  .sent-fact.b{ --c:#1D5FD6; --f:rgba(29,95,214,.25); }
+  .sent-fact.o{ --c:#C2410C; --f:rgba(234,88,12,.25); }
   .client-list-salesman{ font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .sm-update{
     flex:none; text-transform:none; letter-spacing:0; font-size:11px; font-weight:600;
@@ -1856,7 +1859,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(d.type) facts.push('<span>' + escapeHtml(d.type) + '</span>');
     if(d.gsm) facts.push('<span class="num">' + escapeHtml(d.gsm) + '</span>');
     var sc = sentCount(d);
-    if(sc) facts.push('<span class="sent-fact">' + sc + '/' + totalClients(d) + ' sent</span>');
+    if(sc){ var tc = totalClients(d) || sc, pc = Math.min(100, Math.round(sc * 100 / tc)), tone = pc >= 100 ? 'g' : pc >= 50 ? 'b' : 'o';
+      facts.push('<span class="sent-fact ' + tone + '" style="--p:' + pc + '%"><b>' + sc + '</b> of <b>' + tc + '</b> sent</span>'); }
     var factsHtml = facts.join('<span class="sep">&middot;</span>');
 
     var extraChips = (d.origin ? '<div class="chip">Origin : ' + escapeHtml(d.origin) + '</div>' : '') +
