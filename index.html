@@ -248,12 +248,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     display:flex; align-items:center; justify-content:center; transition:transform .2s ease; }
   .card.open .chev{ transform:rotate(180deg); }
 
-  .age-badge{display:inline-block;vertical-align:2px;margin-left:8px;background:var(--good-bg);color:var(--good);font-size:10.5px;font-weight:700;letter-spacing:0.3px;border-radius:6px;padding:3px 8px;white-space:nowrap;}
-  .age-badge.a1{background:rgba(37,99,235,.14);color:#2563EB;}
-  .age-badge.a2{background:rgba(217,119,6,.16);color:#C2610A;}
-  .age-badge.a3{background:rgba(147,51,234,.14);color:#9333EA;}
-  .age-badge.a4{background:rgba(219,39,119,.14);color:#DB2777;}
-  .age-badge.a5{background:rgba(100,116,139,.18);color:#64748B;}
+  .age-badge{display:inline-block;vertical-align:2px;margin-left:8px;background:var(--chip);color:var(--navy);font-size:10.5px;font-weight:700;letter-spacing:0.3px;border-radius:6px;padding:3px 8px;white-space:nowrap;}
   .new-badge{
     display:inline-block; vertical-align:2px; margin-left:8px;
     background:var(--good-bg); color:var(--good);
@@ -298,8 +293,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .sm-tile .smc b{ color:var(--ink); font-weight:600; }
   .sm-tile .smc small{ font-family:var(--f-ui,inherit); font-size:11px; font-weight:600; margin-left:4px; opacity:.85; }
   .sm-tile .smbar{ height:4px; border-radius:99px; background:var(--line); overflow:hidden; margin-top:5px; }
-  .sm-tile .smbar i{ display:block; height:100%; background:var(--good); border-radius:99px; }
-  .sm-tile.done .smc, .sm-tile.done .smc b{ color:var(--good); }
+  .sm-tile .smbar i{ display:block; height:100%; background:var(--navy); border-radius:99px; }
+  .sm-tile.done .smc, .sm-tile.done .smc b{ color:var(--navy); }
   .sm-tile.active{ background:var(--navy); color:#fff; }
   .sm-tile.active .smc, .sm-tile.active .smc b{ color:#fff; }
   .sm-tile.active .smbar{ background:rgba(255,255,255,0.25); }
@@ -336,16 +331,14 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   /* ---------- Sent log ---------- */
   .sent-progress{ display:flex; flex-direction:column; gap:6px; }
   .sp-bar{ height:9px; border-radius:99px; background:var(--chip); overflow:hidden; }
-  .sp-bar i{ display:block; height:100%; border-radius:99px; background:var(--good); transition:width .3s ease; }
+  .sp-bar i{ display:block; height:100%; border-radius:99px; background:var(--navy); transition:width .3s ease; }
   .sp-text{ font-size:13.5px; color:var(--ink-2); font-weight:600; display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
-  .sp-text .sp-pct{ margin-left:auto; color:var(--good); font-weight:700; }
-  .sp-text .sp-left{ color:var(--amber,#B7791F); font-weight:600; }
-  .sp-text .sp-done{ color:var(--good); font-weight:700; }
+  .sp-text .sp-pct{ margin-left:auto; color:var(--navy); font-weight:700; }
+  .sp-text .sp-left{ color:var(--navy); font-weight:600; }
+  .sp-text .sp-done{ color:var(--navy); font-weight:700; }
   .sp-text b{ color:var(--ink); font-family:var(--f-data); font-size:20px; }
-  .sent-fact{ --c:#16875A; --f:rgba(22,135,90,.28); position:relative; display:inline-block; padding:4px 11px; border-radius:999px; border:1.5px solid var(--c); font-size:13px; font-weight:600; color:var(--ink); background:linear-gradient(90deg,var(--f) var(--p),transparent var(--p)); white-space:nowrap; }
+  .sent-fact{ --c:#1D5FD6; --f:rgba(29,95,214,.25); position:relative; display:inline-block; padding:4px 11px; border-radius:999px; border:1.5px solid var(--c); font-size:13px; font-weight:600; color:var(--ink); background:linear-gradient(90deg,var(--f) var(--p),transparent var(--p)); white-space:nowrap; }
   .sent-fact b{ font-weight:800; color:var(--c); font-size:14px; }
-  .sent-fact.b{ --c:#1D5FD6; --f:rgba(29,95,214,.25); }
-  .sent-fact.o{ --c:#C2410C; --f:rgba(234,88,12,.25); }
   .client-list-salesman{ font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .sm-update{
     flex:none; text-transform:none; letter-spacing:0; font-size:11px; font-weight:600;

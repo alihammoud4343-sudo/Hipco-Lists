@@ -9,7 +9,7 @@ self.addEventListener('notificationclick',function(e){
 });
 // OneSignal push support (wrapped so a blocked network never breaks the app's own worker)
 try{importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js')}catch(e){}
-const C='hipco-v20';
+const C='hipco-v21';
 self.addEventListener('install',e=>{self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 // newest file from GitHub; if the network is slow or down (e.g. phone just woke up from a notification) use the saved copy after 3 s.
