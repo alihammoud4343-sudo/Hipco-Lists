@@ -2714,6 +2714,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     return '<table class="sz"><thead><tr><th>Size</th><th>GSM</th><th>Quantity</th></tr></thead><tbody>' + r.map(function(x){ return '<tr><td>' + escapeHtml(x.size || '') + '</td><td>' + escapeHtml(x.gsm || '') + '</td><td>' + escapeHtml(x.qty || '') + '</td></tr>'; }).join('') + '</tbody></table>';
   }
   function inqStatus(d){ var s = d.status === 'answered' ? 'price' : (d.status || 'open'); return INQ_STATUS[s] ? s : 'open'; }
+  function fmtStamp(ts, dayKey){ try{ if(!ts) return dayKey ? fmtInqDate(dayKey) : ''; var d = new Date(ts), o = { timeZone: 'Asia/Beirut' }; return d.toLocaleDateString('en-GB', Object.assign({ day: 'numeric', month: 'short', year: 'numeric' }, o)) + ' \u00b7 ' + d.toLocaleTimeString('en-GB', Object.assign({ hour: '2-digit', minute: '2-digit', hour12: false }, o)); }catch(e){ return dayKey || ''; } }
   function fmtInqDate(k){ try{ return longDay(k); }catch(e){ return k || ''; } }
   function renderInq(){
     var sel = document.getElementById('iqFilter');
@@ -2727,7 +2728,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(!list.length){ el.innerHTML = '<div class="empty">No inquiries yet.</div>'; return; }
     el.innerHTML = list.map(function(d){
       var st = inqStatus(d), sinfo = INQ_STATUS[st];
-      var rows = [['Salesman', d.salesman], ['Date', fmtInqDate(d.date)], ['Product', d.product], ['Quantity', d.qty], ['Size', d.size], ['GSM', d.gsm], ['Destination', d.country], ['Client type', d.clientType]]
+      var rows = [['Salesman', d.salesman], ['Date & time', fmtStamp(d.createdAt, d.date)], ['Product', d.product], ['Quantity', d.qty], ['Size', d.size], ['GSM', d.gsm], ['Destination', d.country], ['Client type', d.clientType]]
         .filter(function(r){ return r[1]; }).map(function(r){ return '<dt>' + r[0] + '</dt><dd>' + escapeHtml(r[1]) + '</dd>'; }).join('');
       var opts = Object.keys(INQ_STATUS).map(function(k){ return '<option value="' + k + '"' + (k === st ? ' selected' : '') + '>' + INQ_STATUS[k].en + ' · ' + INQ_STATUS[k].ar + '</option>'; }).join('');
       var id = escapeHtml(d._id);
@@ -3327,7 +3328,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
           (done ? '<span class="st">Done</span>' : (dueNow ? '<span class="st due">Due ' + escapeHtml(fmtInqDate(r.due)) + '</span>' : (r.due ? '<span class="st">' + escapeHtml(fmtInqDate(r.due)) + '</span>' : ''))) + '</div>' +
           (r.note ? '<div class="nt">' + escapeHtml(r.note) + '</div>' : '') +
           (ms.length ? '<div class="rem-match">🔔 New list matches' + ms.slice(0, 4).map(function(d){ return '<div>' + escapeHtml((d.reference || '').split('-')[0] || d.reference || '') + ' · ' + escapeHtml(d.quality_group || '') + ' · ' + escapeHtml(d.gsm || '') + ' · ' + escapeHtml(d.qty_mt || '') + '</div>'; }).join('') + '</div>' : '') +
-          '<div class="meta">Added ' + escapeHtml(fmtInqDate(r.date)) + '</div>' +
+          '<div class="meta">Added ' + escapeHtml(fmtStamp(r.createdAt, r.date)) + '</div>' +
           '<div class="acts"><button type="button" onclick="__remDone(\'' + id + '\',' + (done ? 'false' : 'true') + ')">' + (done ? 'Reopen' : '✓ Done') + '</button>' +
           '<button type="button" onclick="__remDel(this,\'' + id + '\')">Delete</button></div></div>';
       });
