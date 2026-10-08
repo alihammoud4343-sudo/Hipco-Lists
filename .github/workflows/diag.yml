@@ -1,0 +1,14 @@
+name: Alert diagnosis
+on:
+  push:
+    paths: ['tools/diag.json']
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Diagnose
+        env: { ONESIGNAL_API_KEY: '${{ secrets.ONESIGNAL_API_KEY }}' }
+        run: node tools/diag.mjs
