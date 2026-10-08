@@ -1691,10 +1691,12 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     lines.push('Offer ' + (d.reference || '') + ' — ' + (d.product || '') + (d.qty_mt ? ' (' + d.qty_mt + ')' : ''));
     lines.push('');
     lines.push('I sent it to ' + sent.length + ' of your ' + (sent.length + notSent.length) + ' matching clients:');
-    sent.forEach(function(c){ lines.push('• ' + c.company + (c.country ? ' (' + c.country + ')' : '')); });
+    var line = function(c){ return '• ' + c.company + (c.country ? ' (' + c.country + ')' : '') + (c.grade ? ' — Grade ' + c.grade : '') + (c.phone ? ' — ' + c.phone : ''); };
+    sent.forEach(function(c){ lines.push(line(c)); });
     if(notSent.length){
       lines.push('');
-      lines.push('Not sent yet: ' + notSent.map(function(c){ return c.company; }).join(', '));
+      lines.push('Not sent yet (' + notSent.length + '):');
+      notSent.forEach(function(c){ lines.push(line(c)); });
     }
     lines.push('');
     lines.push('— Ali');
