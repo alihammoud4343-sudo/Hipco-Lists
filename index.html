@@ -379,6 +379,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .fu-sum{ font-size:11px; font-weight:600; border-radius:999px; padding:3px 9px; background:var(--chip); color:var(--ink); }
   .status.hold{ color:#C58A12; }
   .card.hold{ opacity:0.85; }
+  .status.crm{ color:#6B3FD1; }
+  .card.crm{ border-left:4px solid #6B3FD1; }
+  .crm-btn{ display:block; width:100%; margin:10px 0 2px; padding:11px 12px; border-radius:12px; border:1.5px solid #6B3FD1; background:#F3EEFF; color:#4B26A8; font:700 13.5px var(--f-body); cursor:pointer; }
+  .crm-btn.on{ background:#6B3FD1; color:#fff; }
   .aging-fact{ color:#C58A12; font-weight:600; }
   .offer-actions{ display:flex; gap:8px; margin:8px 0; }
   .offer-actions button{ font:inherit; font-size:12px; font-weight:600; border:1px solid var(--line); background:transparent; color:var(--ink); border-radius:999px; padding:6px 12px; cursor:pointer; }
@@ -1667,7 +1671,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var prev = d.status, prevAt = d.statusAt, at = new Date().toISOString();
     d.status = st; d.statusAt = at; render();
     if(!dbRef) return;
-    try{ await dbRef.doc('stocklots/' + offerId).update({ status: st, statusAt: at }); showToast(st === 'sold' ? 'Marked as sold' : st === 'hold' ? 'Put on hold' : 'Back to available'); }
+    try{ await dbRef.doc('stocklots/' + offerId).update({ status: st, statusAt: at }); showToast(st === 'sold' ? 'Marked as sold' : st === 'hold' ? 'Put on hold' : st === 'crm' ? 'Marked: waiting CRM approval' : 'Back to available'); }
     catch(e){ d.status = prev; d.statusAt = prevAt; render(); showToast('Couldn’t change the status — only Ali’s account can'); }
   };
   function daysOld(iso){ var t = new Date(iso); if(!iso || isNaN(t.getTime())) return 0; return Math.floor((Date.now() - t.getTime()) / 864e5); }
@@ -1829,7 +1833,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   var PDF_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 14h6M9 17h4"/></svg>';
 
   function cardHtml(d){
-    var sold = (d.status === 'sold'), hold = (d.status === 'hold');
+    var sold = (d.status === 'sold'), hold = (d.status === 'hold'), crm = (d.status === 'crm');
     var docId = String(d._id || '');
     var open = !!expandedCards[docId];
     var toggle = ' onclick="__toggleCard(\'' + jsStr(docId) + '\')"';
@@ -1841,6 +1845,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
 
     var facts = [];
     if(sold || hold) facts.push('<span class="status ' + (sold ? 'sold' : 'hold') + '">' + (sold ? 'Sold' : 'On hold') + '</span>');
+    if(crm) facts.push('<span class="status crm">Waiting CRM</span>');
     var age = daysOld(d.dateAdded);
     if(!sold && age >= 14) facts.push('<span class="aging-fact">' + age + 'd old</span>');
     if(d.type) facts.push('<span>' + escapeHtml(d.type) + '</span>');
@@ -1861,10 +1866,11 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       '</div>' +
       '<div class="ar-details" dir="rtl">' + escapeHtml(arCardLine(d)) + '</div>' +
       (d.pdf_url ? '<button type="button" class="pdf-btn" data-pdf="' + escapeHtml(d.pdf_url) + '" data-ref="' + escapeHtml(d.reference || 'report') + '">' + PDF_ICON + '<span>Open PDF report</span></button>' : '') +
+      '<button type="button" class="crm-btn' + (crm ? ' on' : '') + '" onclick="__setOfferStatus(\'' + jsStr(docId) + '\',\'' + (crm ? 'available' : 'crm') + '\')">' + (crm ? '✔ Waiting for CRM approval — tap when sent / done' : '⏳ Mark: waiting CRM approval') + '</button>' +
       clientMatchHtml(d);
 
     return (
-      '<div class="card' + (sold ? ' sold' : '') + (hold ? ' hold' : '') + (open ? ' open' : '') + '" data-card="' + escapeHtml(docId) + '">' +
+      '<div class="card' + (sold ? ' sold' : '') + (hold ? ' hold' : '') + (crm ? ' crm' : '') + (open ? ' open' : '') + '" data-card="' + escapeHtml(docId) + '">' +
         '<div class="card-top"' + toggle + '>' +
           '<div>' +
             '<div class="product">' + escapeHtml(d.product || '—') +
@@ -2382,7 +2388,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var typesPresent = {};
     allDocs.forEach(function(d){ if(d.type) typesPresent[d.type] = true; });
 
-    var seg = [['all','All'],['available','Available'],['hold','On hold'],['sold','Sold']].map(function(o){
+    var seg = [['all','All'],['available','Available'],['crm','Waiting CRM'],['hold','On hold'],['sold','Sold']].map(function(o){
       return '<button type="button" class="' + (filterStatus === o[0] ? 'on' : '') + '" onclick="__setStatusFilter(\'' + o[0] + '\')">' + o[1] + '</button>';
     }).join('');
     var badge = priceTodo(dashRows().filter(function(r){ return SEC.priv || PROTECTED_SM.indexOf(r.sm) === -1; })).length;
