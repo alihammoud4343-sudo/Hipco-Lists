@@ -249,6 +249,11 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .card.open .chev{ transform:rotate(180deg); }
 
   .age-badge{display:inline-block;vertical-align:2px;margin-left:8px;background:var(--good-bg);color:var(--good);font-size:10.5px;font-weight:700;letter-spacing:0.3px;border-radius:6px;padding:3px 8px;white-space:nowrap;}
+  .age-badge.a1{background:rgba(37,99,235,.14);color:#2563EB;}
+  .age-badge.a2{background:rgba(217,119,6,.16);color:#C2610A;}
+  .age-badge.a3{background:rgba(147,51,234,.14);color:#9333EA;}
+  .age-badge.a4{background:rgba(219,39,119,.14);color:#DB2777;}
+  .age-badge.a5{background:rgba(100,116,139,.18);color:#64748B;}
   .new-badge{
     display:inline-block; vertical-align:2px; margin-left:8px;
     background:var(--good-bg); color:var(--good);
@@ -967,7 +972,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   function yesterdayKey(){ var d = new Date(); d.setDate(d.getDate() - 1); return ymd(d); }
   function longDay(k){ var d = keyToDate(k); return DAY_NAMES[d.getDay()] + ' ' + d.getDate() + ' ' + MONTH_NAMES[d.getMonth()] + ' ' + d.getFullYear(); }
   // NEW = added today
-  function ageBadge(iso){ var k=dayKey(iso); if(!k) return ''; var p=k.split('-'); var d0=new Date(+p[0],+p[1]-1,+p[2]); if(isNaN(d0.getTime())) return ''; var n=Math.max(0,Math.round((keyToDate(todayKey())-d0)/864e5)); return '<span class="age-badge">'+(n===0?'Today':n===1?'1 day ago':n+' days ago')+'</span>'; }
+  function ageBadge(iso){ var k=dayKey(iso); if(!k) return ''; var p=k.split('-'); var d0=new Date(+p[0],+p[1]-1,+p[2]); if(isNaN(d0.getTime())) return ''; var n=Math.max(0,Math.round((keyToDate(todayKey())-d0)/864e5)); return '<span class="age-badge a'+Math.min(n,5)+'">'+(n===0?'Today':n===1?'1 day ago':n+' days ago')+'</span>'; }
   function isNew(iso){ var k = dayKey(iso); return !!k && k === todayKey(); }
 
   function escapeHtml(s){
