@@ -1186,7 +1186,20 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     'Woodfree':'ورق ابيض',
     'Testliner / Fluting':'تستلاينر و فلوتنغ',
     'Kraftliner':'كرافت لاينر',
-    'Kraftliner / Testliner / Fluting':'كرافت لاينر و تستلاينر و فلوتنغ'
+    'Kraftliner / Testliner / Fluting':'كرافت لاينر و تستلاينر و فلوتنغ',
+    // Arabic quality terms from the Client Master (Dashboard sheet)
+    'FBB':'كرتون ابيض غذائي',
+    'SBS / FBB / Duplex':'كرتون ابيض غذائي و SBS و دوبلكس',
+    'Coated Woodfree':'ورق ابيض مطلي',
+    'Uncoated Woodfree':'ورق ابيض',
+    'PE Cupstock':'ورق اكواب مطلي',
+    'Bulky Book Paper':'ورق كتب بالكي',
+    'Newsprint':'ورق جريدة',
+    'Tissue':'ورق مناديل',
+    'Sack Kraft':'كرافت اكياس',
+    'Greyboard':'كرتون رمادي',
+    'Copy Paper':'ورق تصوير',
+    'Label':'ورق ملصقات'
   };
   var AR_TYPE={Rolls:'رولو', Sheets:'طراحي', Mixed:'رولو و طراحي'};
   // Arabic offer line: quality - rolls/sheets - from..to grammage - tons combined
@@ -1199,6 +1212,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var hay = (d.product || '') + ' ' + (d.reference || '');
     if(/(^|[^A-Za-z0-9])2CS([^A-Za-z0-9]|$)/i.test(hay)){
       q = (d.quality_group === 'Woodfree' || /(^|[^A-Za-z])U?WF([^A-Za-z]|$)/i.test(hay)) ? 'كوشيه و ورق ابيض' : 'كوشيه';
+    }
+    // Coated woodfree: add the finish (matte / gloss) when the list says so
+    if(d.quality_group === 'Coated Woodfree' && q === AR_QUALITY['Coated Woodfree']){
+      if(/matt?e?\b/i.test(hay)) q += ' مات'; else if(/gloss/i.test(hay)) q += ' لماع';
     }
     var parts = [q];
     if(AR_TYPE[d.type]) parts.push(AR_TYPE[d.type]);
