@@ -2158,7 +2158,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     // header band
     doc.rect(0, 0, W, 30, NAVY);
     doc.text(M, 13, 'HIPCO', 22, { bold:true, color:[255,255,255] });
-    doc.text(M, 20, 'Stocklot Offshore  -  Client interest report', 10.5, { color:[214,224,247] });
+    doc.text(M, 20, ctx.single ? ('Salesman summary  -  ' + ctx.single) : 'Stocklot Offshore  -  Client interest report', 10.5, { color:[214,224,247] });
     doc.text(W - M, 12, now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }), 10, { bold:true, color:[255,255,255], align:'right' });
     doc.text(W - M, 17.5, now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }), 8.5, { color:[214,224,247], align:'right' });
     doc.text(W - M, 23, ctx.scope, 8, { color:[214,224,247], align:'right' });
@@ -2184,6 +2184,34 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
         var ag = agoText(r.at); return [{ t:r.c.company, bold:true }, r.sm, r.d.reference || '', { t:ag.txt, color:ag.days >= 1 ? AMB : INK, bold:ag.days >= 1 }, r.note || ''];
       }));
     }
+    if(ctx.single){
+      var gs1 = dGroups(rs), ag1 = listAgg(rs), sentL = ag1.order.filter(function(k){ return ag1.by[k].s > 0; });
+      var L1 = [];
+      L1.push(s.sent + ' of ' + s.total + ' matched clients have been sent an offer (' + pctOf(s.sent, s.total) + '%). ' + s.int + ' interested, ' + s.no + ' not interested, ' + s.wait + ' awaiting a reply, ' + s.ns + ' not contacted yet.');
+      L1.push(resp ? ('Of the ' + resp + ' clients who replied, ' + pctOf(s.int, resp) + '% are interested.') : 'No client replies have been recorded yet.');
+      if(s.price) L1.push(s.price + ' client' + (s.price === 1 ? ' is' : 's are') + ' waiting for a price from you.');
+      var gl = ['A','B','C'].map(function(G){ var t = gs1.filter(function(g){ return g.c.grade === G; }); return t.length ? ('Grade ' + G + ': ' + t.filter(function(g){ return g.sent; }).length + '/' + t.length + ' reached, ' + t.filter(function(g){ return g.cls === 'int'; }).length + ' interested') : ''; }).filter(Boolean);
+      if(gl.length) L1.push(gl.join('   |   '));
+      if(sentL.length) L1.push(sentL.length + ' list' + (sentL.length === 1 ? '' : 's') + ' sent so far; latest ' + ag1.by[sentL[0]].ref + '.');
+      pdfBar(doc, 'Summary', null);
+      L1.forEach(function(t){ doc.wrap(t, W - M * 2 - 4, 9).forEach(function(ln){ doc.ensure(6); doc.text(M + 2, doc.y() + 4, ln, 9, { color:INK }); doc.y(doc.y() + 4.6); }); doc.y(doc.y() + 1.2); });
+      doc.y(doc.y() + 3);
+      var gi = gs1.filter(function(g){ return g.cls === 'int'; }), gw = gs1.filter(function(g){ return g.cls === 'wait'; });
+      if(gi.length){
+        pdfBar(doc, 'Interested clients', gi.length + ' client' + (gi.length === 1 ? '' : 's'), GOOD);
+        pdfTable(doc, [{w:46},{w:24},{w:12},{w:52},{w:48}], ['Client', 'Country', 'Grade', 'List', 'Note'], gi.map(function(g){
+          var hit = g.rows.filter(function(r){ return r.st === 'interested' || r.st === 'price'; });
+          return [{ t:g.c.company, bold:true }, g.c.country || '', g.c.grade || '', hit.map(function(r){ return r.d.reference; }).join(', '), hit.map(function(r){ return r.note; }).filter(Boolean).join(' / ')];
+        }));
+      }
+      if(gw.length){
+        pdfBar(doc, 'Awaiting reply  -  follow up', gw.length + ' client' + (gw.length === 1 ? '' : 's'), AMB);
+        pdfTable(doc, [{w:46},{w:24},{w:12},{w:56},{w:44}], ['Client', 'Country', 'Grade', 'List', 'Sent'], gw.map(function(g){
+          var sr = g.rows.filter(function(r){ return r.sent; }), last = sr.map(function(r){ return r.sentAt || ''; }).sort().pop();
+          return [{ t:g.c.company, bold:true }, g.c.country || '', g.c.grade || '', sr.map(function(r){ return r.d.reference; }).join(', '), whenPdf(last)];
+        }));
+      }
+    }
     // per salesman
     var bySm = {}; rs.forEach(function(r){ (bySm[r.sm] = bySm[r.sm] || []).push(r); });
     Object.keys(bySm).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); }).forEach(function(n){
@@ -2202,7 +2230,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       }));
     });
     if(ctx.lockedList.length){ doc.ensure(10); doc.text(M, doc.y() + 2, 'Not included (locked): ' + ctx.lockedList.join(', ') + '.', 8, { color:GREY }); }
-    return doc.finish('HIPCO Stocklot Offshore  |  Client interest report  |  ' + now.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }));
+    return doc.finish('HIPCO Stocklot Offshore  |  ' + (ctx.single ? ctx.single + ' summary' : 'Client interest report') + '  |  ' + now.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }));
   }
   var dashCtx = null;
   window.__dashPdf = async function(){
@@ -2216,6 +2244,19 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       showToast(res.ok ? (res.how === 'tab' ? 'Report opened — save it from there' : 'Report ready') : 'Could not save the report');
     }catch(e){ showToast('Could not build the report'); try{ console.error(e); }catch(_){} }
     if(btn){ btn.disabled = false; btn.innerHTML = '&#8681; Export report (PDF)'; }
+  };
+
+  window.__dashPdfSm = async function(name, btn){
+    var rs = dashRows().filter(function(r){ return r.sm === name && (!dashQ || r.q === dashQ) && (SEC.priv || PROTECTED_SM.indexOf(r.sm) === -1); });
+    if(!rs.length){ showToast('Nothing to export for ' + name + ' yet'); return; }
+    var old = btn ? btn.innerHTML : ''; if(btn){ btn.disabled = true; btn.textContent = 'Preparing…'; }
+    try{
+      var bytes = buildReport({ rs:rs, single:name, scope:name + (dashQ ? ' - ' + dashQ : ''), lockedList:[] }), d = new Date(), pad = function(n){ return ('0' + n).slice(-2); };
+      var file = new File([bytes], 'HIPCO_' + name.replace(/[^A-Za-z0-9]+/g, '') + '_Summary_' + pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear() + '.pdf', { type:'application/pdf' });
+      var res = await saveViaDownloads(file);
+      showToast(res.ok ? (res.how === 'tab' ? 'Summary opened — save it from there' : name + ' summary ready') : 'Could not save the summary');
+    }catch(e){ showToast('Could not build the summary'); try{ console.error(e); }catch(_){} }
+    if(btn){ btn.disabled = false; btn.innerHTML = old; }
   };
 
   function dashSummary(rs, scope){
@@ -2335,7 +2376,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     Object.keys(bySm).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); }).forEach(function(n){
       var g = bySm[n], st = dStat(g);
       if(lockedList.indexOf(n) !== -1) return;
-      out += '<div class="dcard"><div class="dcard-top"><div class="dcard-title">' + escapeHtml(n) + '</div><div class="dcard-sub">' + st.total + ' clients</div></div>' + dStack(st) + dStatsHtml(st) + respInner(g, n) + listTable(g, 'sm|' + n + '|t') + '</div>';
+      out += '<div class="dcard"><div class="dcard-top"><div class="dcard-title">' + escapeHtml(n) + '</div><div class="dcard-sub">' + st.total + ' clients</div></div>' + (st.total ? '<div class="dash-actions" style="margin:2px 0 8px"><button type="button" class="dash-export" onclick="__dashPdfSm(\'' + jsStr(n) + '\', this)">&#8681; Summary PDF &middot; ' + escapeHtml(n) + '</button></div>' : '') + dStack(st) + dStatsHtml(st) + respInner(g, n) + listTable(g, 'sm|' + n + '|t') + '</div>';
     });
     lockedList.forEach(function(n){
       out += '<div class="dcard" style="border-style:dashed"><div class="dcard-top"><div class="dcard-title">&#128274; ' + escapeHtml(n) + '</div><div class="dcard-sub">Locked</div></div>' +
