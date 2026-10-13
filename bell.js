@@ -4,7 +4,7 @@
 // Inside a section the bell shows only that section's notifications; the home cards show unread counts.
 (function(){
   var CFG = window.HIPCO_CFG || {}; if(!CFG.supabaseUrl) return;
-  var SECS = { stock: 'Stocklot offers', inq: 'Inquiries', rem: 'Reminders' };
+  var SECS = { stock: 'Stocklot lists', inq: 'Inquiries', rem: 'Reminders' };
   var items = [], open = false, timer = null, cur = 'home', bannerT = null, lastBannerAt = {};
   function lsg(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
   function lss(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
