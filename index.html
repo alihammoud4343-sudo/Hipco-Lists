@@ -2439,7 +2439,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
           (rel ? '<span class="gtitle">' + rel + '</span>' : '') +
           '<span class="gdate">' + (k ? longDay(k) : 'No date') + '</span>' +
           '<span class="gline"></span>' +
-          '<span class="gcount">' + n + ' offer' + (n === 1 ? '' : 's') + '</span></div>';
+          '<span class="gcount">' + n + ' list' + (n === 1 ? '' : 's') + '</span></div>';
       }
       out += cardHtml(d);
     });
@@ -2488,7 +2488,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     });
     var clientsMatched = Object.keys(clientSet).length;
     statsRowEl.innerHTML =
-      '<div class="kpi"><div class="k"><span class="live-dot" aria-hidden="true"></span>Live offers</div><div class="v">' + availableCount + '</div></div>' +
+      '<div class="kpi"><div class="k"><span class="live-dot" aria-hidden="true"></span>Live lists</div><div class="v">' + availableCount + '</div></div>' +
       '<div class="kpi"><div class="k">Available</div><div class="v">' + Math.round(totalMt).toLocaleString('en-US') + '<small>MT</small></div></div>' +
       '<div class="kpi"><div class="k">Clients match</div><div class="v">' + clientsMatched + '</div></div>';
 
