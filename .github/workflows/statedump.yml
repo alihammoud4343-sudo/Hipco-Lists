@@ -1,0 +1,25 @@
+name: Dump shared database state
+on:
+  push:
+    paths: ['tools/statedump.json']
+permissions:
+  contents: write
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Export
+        run: |
+          node -e "
+          const fs=require('fs');const cfg=fs.readFileSync('config.js','utf8');
+          const U=/supabaseUrl: \"([^\"]*)\"/.exec(cfg)[1],K=/anonKey: \"([^\"]*)\"/.exec(cfg)[1],C=/dbCode: \"([^\"]*)\"/.exec(cfg)[1];
+          (async()=>{let all=[];for(let o=0;;o+=1000){const r=await fetch(U+'/rest/v1/kv?select=col,id,data&order=col,id&limit=1000&offset='+o,{headers:{apikey:K,'x-hipco':C}});const j=await r.json();if(!Array.isArray(j)){console.log('ERR',JSON.stringify(j));process.exit(1)}all=all.concat(j);if(j.length<1000)break;}
+          const out={};for(const x of all){(out[x.col]=out[x.col]||{})[x.id]=x.data;}
+          fs.mkdirSync('data',{recursive:true});fs.writeFileSync('data/state_dump.json',JSON.stringify(out));console.log('rows',all.length,Object.keys(out).map(k=>k+':'+Object.keys(out[k]).length).join(' '));})();"
+      - name: Commit
+        run: |
+          git config user.name "state-dump"; git config user.email "dump@users.noreply.github.com"
+          git add data/state_dump.json && git commit -m "state dump" && git push
