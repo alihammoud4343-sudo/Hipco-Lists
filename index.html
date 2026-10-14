@@ -435,6 +435,28 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .dash-note .copy{ margin-top:6px; font:inherit; font-size:12px; font-weight:600; border:1px solid var(--line); background:transparent; color:var(--navy); border-radius:999px; padding:6px 12px; cursor:pointer; }
   .dash-h{ font-size:11.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--ink); margin:6px 4px 0; display:flex; align-items:center; gap:10px; }
   .dash-h::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .dd-card{ background:var(--surface); border:1px solid var(--card-line); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; }
+  .dd-head{ width:100%; display:flex; align-items:center; gap:12px; background:none; border:0; font:inherit; color:var(--ink); padding:13px 16px; cursor:pointer; text-align:left; }
+  .dd-head .dd-date{ flex:1; min-width:0; }
+  .dd-head .dd-t{ font-size:14px; font-weight:700; }
+  .dd-head .dd-t span{ font-size:10.5px; letter-spacing:1.1px; text-transform:uppercase; color:var(--navy); margin-right:6px; }
+  .dd-head .dd-s{ font-size:11.5px; color:var(--ink-2); margin-top:2px; }
+  .dd-head .dd-car{ flex:none; color:var(--ink-2); font-size:13px; }
+  .dd-body{ border-top:1px solid var(--line); padding:6px 16px 14px; display:flex; flex-direction:column; gap:14px; }
+  .dd-list{ padding-top:10px; }
+  .dd-lh{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+  .dd-lref{ font-family:var(--f-data); font-size:12.5px; font-weight:700; color:var(--navy); word-break:break-all; }
+  .dd-lcnt{ flex:none; font-size:11px; font-weight:700; color:var(--ink-2); }
+  .dd-lq{ font-size:11.5px; color:var(--ink-2); margin:1px 0 6px; }
+  .dd-sm{ font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--ink-2); margin:8px 0 2px; display:flex; justify-content:space-between; }
+  .dd-cl{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:6px 0; border-top:1px solid var(--line); font-size:12.5px; }
+  .dd-cl:first-of-type{ border-top:0; }
+  .dd-cl .nm{ font-weight:600; min-width:0; overflow-wrap:anywhere; }
+  .dd-cl .ph{ display:block; font-family:var(--f-data); font-size:11px; color:var(--ink-2); margin-top:1px; }
+  .dd-cl .rt{ flex:none; text-align:right; font-size:10.5px; color:var(--ink-2); }
+  .dd-cl .stt{ display:block; font-weight:700; margin-bottom:1px; }
+  .dd-cl .stt.i{ color:var(--good); } .dd-cl .stt.n{ color:var(--sold); } .dd-cl .stt.w{ color:#C58A12; }
+  .dd-copy{ align-self:flex-start; font:inherit; font-size:12px; font-weight:600; border:1px solid var(--line); background:transparent; color:var(--navy); border-radius:999px; padding:6px 12px; cursor:pointer; }
   .dcard{ background:var(--surface); border:1px solid var(--card-line); border-radius:18px; box-shadow:var(--shadow); padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
   .dcard-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
   .dcard-title{ font-size:15px; font-weight:600; }
@@ -2380,6 +2402,69 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     return html;
   }
 
+  // ---------- Daily summary: one press per day, what was sent, per list, per salesman, with client names and numbers ----------
+  var dayTexts = {};
+  window.__dashDay = function(k){ var cur = dashOpen['day|' + k]; if(cur === undefined) cur = (k === todayKey()); dashOpen['day|' + k] = !cur; render(); };
+  window.__dayCopy = function(k){ showToast(copyText(dayTexts[k] || '') ? 'Daily summary copied' : 'Press and hold to copy'); };
+  function dayLabel(k){
+    var pre = k === todayKey() ? 'Today' : k === yesterdayKey() ? 'Yesterday' : '';
+    return { pre: pre, txt: longDay(k) };
+  }
+  function ddStatus(r){
+    if(r.st === 'interested') return ['Interested', 'i'];
+    if(r.st === 'price') return ['Price asked', 'i'];
+    if(r.st === 'no') return ['Not interested', 'n'];
+    return ['Awaiting', 'w'];
+  }
+  function dailyHtml(rs){
+    var days = {};
+    rs.forEach(function(r){ if(!r.sent) return; var k = dayKey(r.sentAt); if(!k) return; (days[k] = days[k] || []).push(r); });
+    var keys = Object.keys(days).sort().reverse();
+    var out = '<div class="dash-h">Daily summary &middot; what was sent</div>';
+    if(keys.indexOf(todayKey()) === -1){ var tl = dayLabel(todayKey()); out += '<div class="dd-card"><div class="dd-head" style="cursor:default"><div class="dd-date"><div class="dd-t"><span>Today</span>' + escapeHtml(tl.txt) + '</div><div class="dd-s">Nothing sent yet today</div></div></div></div>'; }
+    if(!keys.length) return out;
+    keys.forEach(function(k){
+      var rows = days[k], ok = 'day|' + k, open = dashOpen[ok]; if(open === undefined) open = (k === todayKey());
+      var uniq = {}, nCl = 0, bySmN = {}, lists = {}, lorder = [];
+      rows.forEach(function(r){
+        var ck = r.sm + '|' + clientKey(r.c); if(!uniq[ck]){ uniq[ck] = 1; nCl++; bySmN[r.sm] = (bySmN[r.sm] || 0) + 1; }
+        var ref = r.d.reference || r.id; if(!lists[ref]){ lists[ref] = { ref:ref, d:r.d, rows:[] }; lorder.push(ref); }
+        lists[ref].rows.push(r);
+      });
+      lorder.sort(function(a, b){ return lists[a].ref < lists[b].ref ? 1 : -1; });
+      var lb = dayLabel(k);
+      var smLine = Object.keys(bySmN).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); }).map(function(n){ return n + ' ' + bySmN[n]; }).join(' · ');
+      var txt = 'HIPCO Offshore — daily summary, ' + lb.txt + '\nLists sent: ' + lorder.length + ' · Clients reached: ' + nCl + (smLine ? ' (' + smLine + ')' : '') + '\n';
+      var body = '';
+      lorder.forEach(function(ref){
+        var L = lists[ref], q = [L.d.quality_group, L.d.type].filter(Boolean).join(' · ');
+        var cnt = {}; L.rows.forEach(function(r){ cnt[r.sm + '|' + clientKey(r.c)] = 1; });
+        var n = Object.keys(cnt).length;
+        body += '<div class="dd-list"><div class="dd-lh"><div class="dd-lref">' + escapeHtml(ref) + '</div><div class="dd-lcnt">' + n + ' client' + (n === 1 ? '' : 's') + '</div></div>' + (q ? '<div class="dd-lq">' + escapeHtml(q) + '</div>' : '');
+        txt += '\n' + ref + (q ? ' (' + q + ')' : '') + ' — ' + n + ' client' + (n === 1 ? '' : 's') + '\n';
+        var sms = []; L.rows.forEach(function(r){ if(sms.indexOf(r.sm) === -1) sms.push(r.sm); });
+        sms.sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); });
+        sms.forEach(function(sm){
+          var cl = L.rows.filter(function(r){ return r.sm === sm; }).sort(function(a, b){ return String(a.sentAt).localeCompare(String(b.sentAt)); });
+          body += '<div class="dd-sm"><span>' + escapeHtml(sm) + '</span><span>' + cl.length + '</span></div>';
+          txt += sm + ':\n';
+          cl.forEach(function(r){
+            var st = ddStatus(r), ph = fmtPhone(r.c.phone || ''), tm = shortTime(r.sentAt), g = gradeOf(r.c);
+            body += '<div class="dd-cl"><div class="nm">' + escapeHtml(r.c.company) + gradeBadge(r.c) + (ph ? '<span class="ph">' + escapeHtml(ph) + '</span>' : '') + '</div>' +
+              '<div class="rt"><span class="stt ' + st[1] + '">' + st[0] + '</span>' + escapeHtml(tm) + '</div></div>';
+            txt += '• ' + r.c.company + (g ? ' (' + g + ')' : '') + (ph ? ' — ' + ph : '') + ' — ' + st[0] + (tm ? ' — ' + tm : '') + '\n';
+          });
+        });
+        body += '</div>';
+      });
+      dayTexts[k] = txt;
+      out += '<div class="dd-card"><button type="button" class="dd-head" onclick="__dashDay(\'' + jsStr(k) + '\')"><div class="dd-date"><div class="dd-t">' + (lb.pre ? '<span>' + lb.pre + '</span>' : '') + escapeHtml(lb.txt) + '</div>' +
+        '<div class="dd-s">' + lorder.length + ' list' + (lorder.length === 1 ? '' : 's') + ' sent &middot; ' + nCl + ' client' + (nCl === 1 ? '' : 's') + (smLine ? ' &middot; ' + escapeHtml(smLine) : '') + '</div></div><span class="dd-car">' + (open ? '&#9662;' : '&#9656;') + '</span></button>' +
+        (open ? '<div class="dd-body">' + body + '<button type="button" class="dd-copy" onclick="__dayCopy(\'' + jsStr(k) + '\')">Copy day summary</button></div>' : '') + '</div>';
+    });
+    return out;
+  }
+
   function dashHtml(){
     var all = dashRows();
     var sms = [], qs = [];
@@ -2402,6 +2487,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var s = dStat(rs), resp = s.int + s.no;
     dashCtx = { rs:rs, scope:[dashSm, dashQ].filter(Boolean).join(' - ') || 'All salesmen, all qualities', lockedList:lockedList };
     out += '<div class="dash-actions"><button type="button" id="dashPdfBtn" class="dash-export" onclick="__dashPdf()">&#8681; Export report (PDF)</button></div>';
+    out += dailyHtml(rs);
     out += todoHtml(rs);
     out += '<div class="dash-kpis">' +
       '<div class="dash-kpi"><div class="v">' + s.sent + '<small>/' + s.total + '</small></div><div class="k">Reached</div><div class="s">' + pctOf(s.sent, s.total) + '%</div></div>' +
