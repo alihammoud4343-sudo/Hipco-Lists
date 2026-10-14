@@ -456,6 +456,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .dd-cl .rt{ flex:none; text-align:right; font-size:10.5px; color:var(--ink-2); }
   .dd-cl .stt{ display:block; font-weight:700; margin-bottom:1px; }
   .dd-cl .stt.i{ color:var(--good); } .dd-cl .stt.n{ color:var(--sold); } .dd-cl .stt.w{ color:#C58A12; }
+  .dd-btns{ display:flex; flex-wrap:wrap; gap:8px; }
+  .dd-copy.pri{ background:var(--navy); color:#fff; border-color:var(--navy); }
   .dd-copy{ align-self:flex-start; font:inherit; font-size:12px; font-weight:600; border:1px solid var(--line); background:transparent; color:var(--navy); border-radius:999px; padding:6px 12px; cursor:pointer; }
   .dcard{ background:var(--surface); border:1px solid var(--card-line); border-radius:18px; box-shadow:var(--shadow); padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
   .dcard-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
@@ -2315,6 +2317,68 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(btn){ btn.disabled = false; btn.innerHTML = '&#8681; Export report (PDF)'; }
   };
 
+  // ---------- Daily summary PDF: lists sent that day + one table per salesman (client, grade, phone, list, status, time) ----------
+  function buildDayReport(k, rs, scope, lockedList){
+    var doc = pdfDoc(), M = doc.M, W = doc.W, now = new Date();
+    var rows = rs.filter(function(r){ return r.sent && dayKey(r.sentAt) === k; });
+    var gr = dGroups(rows), nCl = gr.length, nInt = gr.filter(function(g){ return g.cls === 'int'; }).length, nNo = gr.filter(function(g){ return g.cls === 'no'; }).length, nWait = gr.filter(function(g){ return g.cls === 'wait'; }).length;
+    var lists = {}, lorder = [];
+    rows.forEach(function(r){ var ref = r.d.reference || r.id; if(!lists[ref]){ lists[ref] = { ref:ref, d:r.d, cl:{}, sm:{} }; lorder.push(ref); } var ck = r.sm + '|' + clientKey(r.c); if(!lists[ref].cl[ck]){ lists[ref].cl[ck] = 1; lists[ref].sm[r.sm] = (lists[ref].sm[r.sm] || 0) + 1; } });
+    lorder.sort(function(a, b){ return slNumber(b) - slNumber(a); });
+    doc.rect(0, 0, W, 30, NAVY);
+    doc.text(M, 13, 'HIPCO', 22, { bold:true, color:[255,255,255] });
+    doc.text(M, 20, 'Daily summary  -  Stocklot Offshore', 10.5, { color:[214,224,247] });
+    doc.text(W - M, 12, longDay(k), 10, { bold:true, color:[255,255,255], align:'right' });
+    doc.text(W - M, 17.5, 'Prepared ' + now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }), 8.5, { color:[214,224,247], align:'right' });
+    doc.text(W - M, 23, scope, 8, { color:[214,224,247], align:'right' });
+    doc.y(38);
+    var kp = [[String(lorder.length), 'Lists sent', '', INK], [String(nCl), 'Clients reached', '', INK], [String(nInt), 'Interested', nInt ? 'follow up with price' : 'so far', GOOD], [String(nWait), 'Awaiting reply', 'to follow up', AMB]];
+    var bw = (W - M * 2) / 4, y0 = doc.y();
+    doc.rect(M, y0, W - M * 2, 21, [248,249,252], [220,224,232]);
+    kp.forEach(function(q, i){
+      var cx = M + bw * i + bw / 2;
+      if(i) doc.line(M + bw * i, y0 + 3, M + bw * i, y0 + 18);
+      doc.text(cx, y0 + 9.5, q[0], 16, { bold:true, color:q[3], align:'center' });
+      doc.text(cx, y0 + 13.8, q[1].toUpperCase(), 6.5, { bold:true, color:GREY, align:'center' });
+      if(q[2]) doc.text(cx, y0 + 17.6, q[2], 7, { color:GREY, align:'center' });
+    });
+    doc.y(y0 + 27);
+    pdfBar(doc, (k === todayKey() ? 'Lists sent today' : 'Lists sent'), lorder.length + ' list' + (lorder.length === 1 ? '' : 's'));
+    pdfTable(doc, [{w:56},{w:44},{w:26},{w:16,align:'right'},{w:40}], ['List', 'Quality', 'Quantity', 'Clients', 'By salesman'], lorder.map(function(ref){
+      var L = lists[ref], n = Object.keys(L.cl).length;
+      return [{ t:ref, bold:true }, [L.d.quality_group, L.d.type].filter(Boolean).join(' - '), L.d.qty_mt || '', String(n), Object.keys(L.sm).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); }).map(function(m){ return m + ' ' + L.sm[m]; }).join(', ')];
+    }));
+    var bySm = {}; gr.forEach(function(g){ (bySm[g.sm] = bySm[g.sm] || []).push(g); });
+    Object.keys(bySm).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); }).forEach(function(n){
+      var gs = bySm[n], i1 = gs.filter(function(g){ return g.cls === 'int'; }).length, w1 = gs.filter(function(g){ return g.cls === 'wait'; }).length, n1 = gs.filter(function(g){ return g.cls === 'no'; }).length;
+      doc.ensure(30);
+      pdfBar(doc, n, gs.length + ' client' + (gs.length === 1 ? '' : 's') + ' reached   |   ' + i1 + ' interested   |   ' + n1 + ' not interested   |   ' + w1 + ' awaiting');
+      gs.sort(function(a, b){ return String(a.rows[0].sentAt).localeCompare(String(b.rows[0].sentAt)); });
+      pdfTable(doc, [{w:44},{w:11},{w:32},{w:42},{w:31},{w:22}], ['Client', 'Grade', 'Phone', 'List', 'Status', 'Sent'], gs.map(function(g){
+        var sr = g.rows.filter(function(r){ return r.sent && dayKey(r.sentAt) === k; });
+        var refs = []; sr.forEach(function(r){ var f = r.d.reference || ''; if(refs.indexOf(f) === -1) refs.push(f); });
+        var lbl = g.cls === 'int' ? (g.rows.some(function(r){ return r.st === 'price'; }) ? 'Asked for price' : 'Interested') : g.cls === 'no' ? 'Not interested' : 'Awaiting reply';
+        var col = g.cls === 'int' ? (lbl === 'Asked for price' ? AMB : GOOD) : g.cls === 'no' ? BAD : GREY;
+        var tms = sr.map(function(r){ return r.sentAt || ''; }).sort()[0];
+        return [{ t:pdfClean(g.c.company) || '(Arabic name)', bold:true }, gradeOf(g.c), fmtPhone(g.c.phone || ''), refs.join(', '), { t:lbl, color:col, bold:true }, shortTime(tms)];
+      }));
+    });
+    if(lockedList && lockedList.length){ doc.ensure(10); doc.text(M, doc.y() + 2, 'Not included (locked): ' + lockedList.join(', ') + '.', 8, { color:GREY }); }
+    return doc.finish('HIPCO Stocklot Offshore  |  Daily summary  |  ' + longDay(k));
+  }
+  window.__dayPdf = async function(k, btn){
+    var rs = dashCtx ? dashCtx.rs : [];
+    if(!rs.some(function(r){ return r.sent && dayKey(r.sentAt) === k; })){ showToast('Nothing was sent on that day'); return; }
+    var old = btn ? btn.innerHTML : ''; if(btn){ btn.disabled = true; btn.textContent = 'Preparing…'; }
+    try{
+      var bytes = buildDayReport(k, rs, dashCtx.scope, dashCtx.lockedList), p2 = function(n){ return ('0' + n).slice(-2); }, dd = keyToDate(k);
+      var file = new File([bytes], 'HIPCO_Daily_Summary_' + p2(dd.getDate()) + '-' + p2(dd.getMonth() + 1) + '-' + dd.getFullYear() + '.pdf', { type:'application/pdf' });
+      var res = await saveViaDownloads(file);
+      showToast(res.ok ? (res.how === 'tab' ? 'Summary opened — save it from there' : 'Daily summary ready') : 'Could not save the summary');
+    }catch(e){ showToast('Could not build the summary'); try{ console.error(e); }catch(_){} }
+    if(btn){ btn.disabled = false; btn.innerHTML = old; }
+  };
+
   window.__dashPdfSm = async function(name, btn){
     var rs = dashRows().filter(function(r){ return r.sm === name && (!dashQ || r.q === dashQ) && (SEC.priv || PROTECTED_SM.indexOf(r.sm) === -1); });
     if(!rs.length){ showToast('Nothing to export for ' + name + ' yet'); return; }
@@ -2460,7 +2524,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       dayTexts[k] = txt;
       out += '<div class="dd-card"><button type="button" class="dd-head" onclick="__dashDay(\'' + jsStr(k) + '\')"><div class="dd-date"><div class="dd-t">' + (lb.pre ? '<span>' + lb.pre + '</span>' : '') + escapeHtml(lb.txt) + '</div>' +
         '<div class="dd-s">' + lorder.length + ' list' + (lorder.length === 1 ? '' : 's') + ' sent &middot; ' + nCl + ' client' + (nCl === 1 ? '' : 's') + (smLine ? ' &middot; ' + escapeHtml(smLine) : '') + '</div></div><span class="dd-car">' + (open ? '&#9662;' : '&#9656;') + '</span></button>' +
-        (open ? '<div class="dd-body">' + body + '<button type="button" class="dd-copy" onclick="__dayCopy(\'' + jsStr(k) + '\')">Copy day summary</button></div>' : '') + '</div>';
+        (open ? '<div class="dd-body">' + body + '<div class="dd-btns"><button type="button" class="dd-copy pri" onclick="__dayPdf(\'' + jsStr(k) + '\', this)">&#8681; Export day summary (PDF)</button><button type="button" class="dd-copy" onclick="__dayCopy(\'' + jsStr(k) + '\')">Copy text</button></div></div>' : '') + '</div>';
     });
     return out;
   }
