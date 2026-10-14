@@ -1155,6 +1155,25 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     });
   })();
 
+  // Phone numbers shown with spaces so they are easy to read: +961 71 234 567
+  var DIAL_CODES = ['961','962','963','964','965','966','967','968','970','971','972','973','974','212','213','216','218','234','241','249','251','254','20','27','30','31','32','33','34','39','41','43','44','49','60','86','90','91','92','98','1','7'];
+  function fmtPhone(raw){
+    return String(raw || '').split(/[|\n;]+/).map(function(p){
+      var t = p.trim(); if(!t) return '';
+      var plus = t.charAt(0) === '+' || t.slice(0, 2) === '00';
+      var d = t.replace(/\D/g, '');
+      if(t.slice(0, 2) === '00') d = d.slice(2);
+      var cc = '';
+      if(plus){ for(var i = 0; i < DIAL_CODES.length; i++){ if(d.indexOf(DIAL_CODES[i]) === 0){ cc = DIAL_CODES[i]; break; } } d = d.slice(cc.length); }
+      var groups = [];
+      if(plus && cc !== '961'){   // abroad: 3-3-3(-4), counted from the left
+        while(d.length > 4){ groups.push(d.slice(0, 3)); d = d.slice(3); } if(d) groups.push(d);
+      }else{   // Lebanon / local: counted from the right, e.g. +961 71 234 567
+        while(d.length > 3){ groups.unshift(d.slice(-3)); d = d.slice(0, -3); } if(d) groups.unshift(d);
+      }
+      return (plus ? '+' + cc + ' ' : '') + groups.join(' ');
+    }).filter(Boolean).join('  |  ');
+  }
   var COUNTRY_DIAL = {
     'Lebanon':'961','Iraq':'964','Syria':'963','Jordan':'962','Qatar':'974',
     'Saudi Arabia':'966','United Arab Emirates':'971','Kuwait':'965','Algeria':'213',
@@ -1812,7 +1831,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
             '<span class="cname">' + escapeHtml(c.company) + gradeBadge(c) + (info ? '<span class="sent-when">Sent ' + escapeHtml(shortDate(info.sentAt)) + ', ' + escapeHtml(shortTime(info.sentAt)) + '</span>' : '') + '</span>' +
             '<span class="cmeta">' +
               (c.country ? '<span class="ccountry">' + escapeHtml(c.country) + '</span>' : '') +
-              (c.phone ? '<span class="cphone">' + escapeHtml(c.phone) + '</span>' : '') +
+              (c.phone ? '<span class="cphone">' + escapeHtml(fmtPhone(c.phone)) + '</span>' : '') +
             '</span>' +
             (fu ? fu.btn : '') +
             waBtn +
