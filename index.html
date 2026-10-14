@@ -1278,6 +1278,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var t = String(d.qty_mt || '').replace(/\s*MT\s*$/i, '').trim();
     if(t) parts.push(t + ' طن');
     if(d.origin_ar) parts.push(String(d.origin_ar).trim());   // origin in Arabic, e.g. ايطالي
+    if(d.mill) parts.push(String(d.mill).trim());   // mill name, always last (e.g. Smurfit)
     return parts.filter(Boolean).join(' - ');
   }
   function arCardLine(d){
