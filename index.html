@@ -691,6 +691,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .szx input{ flex:1; min-width:0; width:100%; box-sizing:border-box; font:inherit; font-size:14px; color:var(--ink); background:var(--ground); border:1px solid var(--line); border-radius:9px; padding:9px 8px; text-align:center; }
   .szu{ flex:none; font-size:15px; font-weight:800; color:var(--ink); background:var(--ground); border:1px solid var(--line); border-radius:9px; padding:8px 12px; white-space:nowrap; }
   .szx b{ font-weight:700; color:var(--ink-2); flex:none; }
+  .iq-form{ display:flex; gap:6px; margin-bottom:6px; }
+  .iq-form button{ flex:1; font:inherit; font-size:13px; font-weight:600; padding:8px 6px; border-radius:9px; border:1px solid var(--line); background:var(--ground); color:var(--ink-2); }
+  .iq-form button.on{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .iqroll .iqx, .iqroll #iqSizeB, .iqroll .iqsb{ display:none; }
   .szx i{ font-style:normal; font-size:12px; color:var(--ink-2); flex:none; }
   .iq-tbl .x{ width:30px; height:34px; border:0; background:transparent; color:var(--sold); font-size:18px; cursor:pointer; }
   .iq-tbtn{ display:flex; gap:8px; flex-wrap:wrap; }
@@ -832,7 +836,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       <div class="hd"><span>Requested information</span><span class="ar" dir="rtl">التفاصيل المطلوبة</span></div>
       <div class="rw"><div class="inq-field"><label for="iqProduct"><span>Quality / product requested</span><span class="ar">النوعية / المنتج المطلوب</span></label><div style="position:relative"><input id="iqProduct" type="text" autocomplete="off" placeholder="Choose from the list or type" style="padding-right:38px"><button type="button" class="iq-arrow" id="iqProdArrow" aria-label="Show qualities"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="iq-sug" id="iqProdSug" hidden></div></div></div></div>
       <div class="rw"><div class="inq-field"><label for="iqQty"><span>Quantity required</span><span class="ar">الكمية المطلوبة</span></label><div class="szx"><input id="iqQty" type="text" inputmode="decimal" oninput="this.dataset.auto=''"><span class="szu">Tons / <span lang="ar">&#1591;&#1606;</span></span></div></div></div>
-      <div class="rw"><div class="inq-field"><label for="iqSize"><span>Size</span><span class="ar">القياس</span></label><input id="iqSize" type="hidden"><div class="szx"><input id="iqSizeA" type="text" inputmode="decimal" aria-label="Width" oninput="__iqSizeSync()"><b>x</b><input id="iqSizeB" type="text" inputmode="decimal" aria-label="Length" oninput="__iqSizeSync()"><i>cm</i></div></div></div>
+      <div class="rw"><div class="inq-field"><label for="iqSize"><span>Size</span><span class="ar">القياس</span></label><input id="iqSize" type="hidden"><div class="iq-form"><button type="button" id="iqFormS" class="on" onclick="__iqForm('sheets')">Sheets / ألواح</button><button type="button" id="iqFormR" onclick="__iqForm('rolls')">Rolls / رولات</button></div><div class="szx"><input id="iqSizeA" type="text" inputmode="decimal" aria-label="Width" oninput="__iqSizeSync()"><b class="iqx">x</b><input id="iqSizeB" type="text" inputmode="decimal" aria-label="Length" oninput="__iqSizeSync()"><i>cm</i></div></div></div>
       <div class="rw"><div class="inq-field"><label for="iqGsm"><span>GSM</span><span class="ar">الجراماج</span></label><input id="iqGsm" type="text" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/\D/g,'')"></div></div>
       <div class="rw"><div class="inq-field"><label><span>Many sizes? Add a table</span><span class="ar">جدول القياسات</span></label>
         <div id="iqTbl"></div>
@@ -2779,7 +2783,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     document.getElementById('iqDate').value = todayKey();
     document.getElementById('iqNo').value = 'INQ-' + pad3(nextInqNo());
     if(clearAll){
-      ['iqClient','iqProduct','iqQty','iqSize','iqGsm','iqCountry','iqComments'].forEach(function(id){ document.getElementById(id).value = ''; }); __iqSizeLoad(); document.getElementById('iqQty').dataset.auto='';
+      ['iqClient','iqProduct','iqQty','iqSize','iqGsm','iqCountry','iqComments'].forEach(function(id){ document.getElementById(id).value = ''; }); __iqForm('sheets', true); __iqSizeLoad(); document.getElementById('iqQty').dataset.auto='';
       iqRows = []; renderIqRows();
       Array.prototype.forEach.call(document.querySelectorAll('input[name=iqType]'), function(r){ r.checked = false; });
       window.__iqApplyType(null);
@@ -2796,7 +2800,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   };
   function szTable(d){
     var r = d.sizes || []; if(!r.length) return '';
-    return '<table class="sz"><thead><tr><th>Size</th><th>GSM</th><th>Quantity</th></tr></thead><tbody>' + r.map(function(x){ return '<tr><td>' + escapeHtml(x.size || '') + '</td><td>' + escapeHtml(x.gsm || '') + '</td><td>' + escapeHtml(x.qty || '') + '</td></tr>'; }).join('') + '</tbody></table>';
+    return '<table class="sz"><thead><tr><th>' + (d.form === 'rolls' ? 'Roll width' : 'Size') + '</th><th>GSM</th><th>Quantity</th></tr></thead><tbody>' + r.map(function(x){ return '<tr><td>' + escapeHtml(x.size || '') + '</td><td>' + escapeHtml(x.gsm || '') + '</td><td>' + escapeHtml(x.qty || '') + '</td></tr>'; }).join('') + '</tbody></table>';
   }
   function inqStatus(d){ var s = d.status === 'answered' ? 'price' : (d.status || 'open'); return INQ_STATUS[s] ? s : 'open'; }
   function fmtStamp(ts, dayKey){ try{ if(!ts) return dayKey ? fmtInqDate(dayKey) : ''; var d = new Date(ts), o = { timeZone: 'Asia/Beirut' }; return d.toLocaleDateString('en-GB', Object.assign({ day: 'numeric', month: 'short', year: 'numeric' }, o)) + ' \u00b7 ' + d.toLocaleTimeString('en-GB', Object.assign({ hour: '2-digit', minute: '2-digit', hour12: false }, o)); }catch(e){ return dayKey || ''; } }
@@ -2813,7 +2817,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(!list.length){ el.innerHTML = '<div class="empty">No inquiries yet.</div>'; return; }
     el.innerHTML = list.map(function(d){
       var st = inqStatus(d), sinfo = INQ_STATUS[st];
-      var rows = [['Salesman', d.salesman], ['Date & time', fmtStamp(d.createdAt, d.date)], ['Product', d.product], ['Quantity', d.qty], ['Size', d.size], ['GSM', d.gsm], ['Destination', d.country], ['Client type', d.clientType]]
+      var rows = [['Salesman', d.salesman], ['Date & time', fmtStamp(d.createdAt, d.date)], ['Product', d.product], ['Quantity', d.qty], [d.form === 'rolls' ? 'Roll width' : 'Size', d.size], ['GSM', d.gsm], ['Destination', d.country], ['Client type', d.clientType]]
         .filter(function(r){ return r[1]; }).map(function(r){ return '<dt>' + r[0] + '</dt><dd>' + escapeHtml(r[1]) + '</dd>'; }).join('');
       var opts = Object.keys(INQ_STATUS).map(function(k){ return '<option value="' + k + '"' + (k === st ? ' selected' : '') + '>' + INQ_STATUS[k].en + ' · ' + INQ_STATUS[k].ar + '</option>'; }).join('');
       var id = escapeHtml(d._id);
@@ -2888,14 +2892,14 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var qtyV = tonsOf(d.qty), sizeV = szOf(d.size), gsmV = String(d.gsm || '').trim();
     var sz = (d.sizes || []).filter(function(r){ return r.size || r.gsm || r.qty; });
     var rows = [['layers', 'Quality / Requested Product', d.product || '', '\u0627\u0644\u0646\u0648\u0639\u064a\u0629 / \u0627\u0644\u0645\u0646\u062a\u062c \u0627\u0644\u0645\u0637\u0644\u0648\u0628'], ['box', 'Required Quantity', qtyV, '\u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629']];
-    if(sz.length) rows.push(['multi']); else rows.push(['ruler', 'Size', sizeV, '\u0627\u0644\u0642\u064a\u0627\u0633'], ['gsm', 'Grammage (GSM)', gsmV, '\u0627\u0644\u062c\u0631\u0627\u0645\u0627\u062c']);
+    if(sz.length) rows.push(['multi']); else rows.push(['ruler', d.form === 'rolls' ? 'Roll Width' : 'Size', sizeV, d.form === 'rolls' ? '\u0639\u0631\u0636 \u0627\u0644\u0631\u0648\u0644' : '\u0627\u0644\u0642\u064a\u0627\u0633'], ['gsm', 'Grammage (GSM)', gsmV, '\u0627\u0644\u062c\u0631\u0627\u0645\u0627\u062c']);
     rows.push(['globe', 'Destination Country', d.country || '', '\u0628\u0644\u062f \u0627\u0644\u0648\u062c\u0647\u0629']);
     var segs = [];
     rows.forEach(function(r){
       if(r[0] === 'multi'){
         var mx = tx + 18, mw = tw2 - 36, cw = mw / 3, my = y + 12, hh = 28, rh2 = 27;
         c.fillStyle = LINE; c.fillRect(tx, y, tw2, 1);
-        c.fillStyle = NAVY; c.fillRect(mx, my, mw, hh); ['Size  /  \u0627\u0644\u0642\u064a\u0627\u0633', 'Grammage (GSM)  /  \u0627\u0644\u062c\u0631\u0627\u0645\u0627\u062c', 'Quantity (Tons)  /  \u0627\u0644\u0643\u0645\u064a\u0629 (\u0637\u0646)'].forEach(function(h, i){ fitTxt(h, mx + cw * i + cw / 2, my + 18.5, cw - 10, 12, true, '#fff', 'center'); });
+        c.fillStyle = NAVY; c.fillRect(mx, my, mw, hh); [d.form === 'rolls' ? 'Roll Width  /  \u0639\u0631\u0636 \u0627\u0644\u0631\u0648\u0644' : 'Size  /  \u0627\u0644\u0642\u064a\u0627\u0633', 'Grammage (GSM)  /  \u0627\u0644\u062c\u0631\u0627\u0645\u0627\u062c', 'Quantity (Tons)  /  \u0627\u0644\u0643\u0645\u064a\u0629 (\u0637\u0646)'].forEach(function(h, i){ fitTxt(h, mx + cw * i + cw / 2, my + 18.5, cw - 10, 12, true, '#fff', 'center'); });
         var yy = my + hh;
         sz.forEach(function(q, qi){ c.fillStyle = qi % 2 ? '#F1F4FB' : '#fff'; c.fillRect(mx, yy, mw, rh2); [szOf(q.size), q.gsm, numOf(q.qty)].forEach(function(t, i){ fitTxt(String(t || ''), mx + cw * i + cw / 2, yy + 18, cw - 14, 12.5, true, INK, 'center'); }); yy += rh2; });
         c.strokeStyle = '#B9C2E0'; c.lineWidth = 0.8; c.strokeRect(mx + 0.4, my + 0.4, mw - 0.8, yy - my - 0.8); c.beginPath(); for(var k = 1; k < 3; k++){ c.moveTo(mx + cw * k, my + hh); c.lineTo(mx + cw * k, yy); } for(var m = 1; m < sz.length; m++){ c.moveTo(mx, my + hh + m * rh2 + 0.4); c.lineTo(mx + mw, my + hh + m * rh2 + 0.4); } c.stroke();
@@ -2979,7 +2983,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     set('iqDate', d.date); document.getElementById('iqNo').value = 'INQ-' + pad3(parseInt(d.no, 10) || 0);
     set('iqSm', d.salesman); set('iqClient', d.client); set('iqProduct', d.product); set('iqQty', __qtyIn(d.qty));
     document.getElementById('iqQty').dataset.auto = '';
-    set('iqSize', d.size); __iqSizeLoad(); set('iqGsm', d.gsm); set('iqCountry', d.country); set('iqComments', d.comments);
+    set('iqSize', d.size); __iqForm(d.form === 'rolls' ? 'rolls' : 'sheets', true); __iqSizeLoad(); set('iqGsm', d.gsm); set('iqCountry', d.country); set('iqComments', d.comments);
     iqRows = (d.sizes || []).map(function(r){ return { size: r.size || '', gsm: r.gsm || '', qty: r.qty || '' }; }); renderIqRows();
     Array.prototype.forEach.call(document.querySelectorAll('input[name=iqType]'), function(r){ r.checked = (r.value === d.clientType); });
     document.getElementById('iqSend').textContent = 'Save changes · حفظ التعديلات';
@@ -3023,7 +3027,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       try{
         await dbRef.doc('inquiries/' + inqEditId).update({
           date: g('iqDate') || todayKey(), client: g('iqClient'), salesman: g('iqSm'), product: g('iqProduct'),
-          qty: __qtyOut(g('iqQty')), size: __fmtSize(g('iqSize')), gsm: g('iqGsm'), country: g('iqCountry'), clientType: typeEl ? typeEl.value : '',
+          qty: __qtyOut(g('iqQty')), size: __fmtSize(g('iqSize')), form: window.__iqIsRoll ? 'rolls' : 'sheets', gsm: g('iqGsm'), country: g('iqCountry'), clientType: typeEl ? typeEl.value : '',
           sizes: iqRows.filter(function(r){ return r.size || r.gsm || r.qty; }).map(function(r){ return { size: __fmtSize(r.size), gsm: r.gsm.trim(), qty: r.qty.trim() }; }),
           comments: g('iqComments'), editedAt: Date.now()
         });
@@ -3036,7 +3040,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     try{
       await dbRef.doc('inquiries/inq' + pad3(no)).set({
         no: no, date: g('iqDate') || todayKey(), client: g('iqClient'), salesman: g('iqSm'), product: g('iqProduct'),
-        qty: __qtyOut(g('iqQty')), size: __fmtSize(g('iqSize')), gsm: g('iqGsm'), country: g('iqCountry'), clientType: typeEl ? typeEl.value : '',
+        qty: __qtyOut(g('iqQty')), size: __fmtSize(g('iqSize')), form: window.__iqIsRoll ? 'rolls' : 'sheets', gsm: g('iqGsm'), country: g('iqCountry'), clientType: typeEl ? typeEl.value : '',
         sizes: iqRows.filter(function(r){ return r.size || r.gsm || r.qty; }).map(function(r){ return { size: __fmtSize(r.size), gsm: r.gsm.trim(), qty: r.qty.trim() }; }),
         comments: g('iqComments'), status: 'open', createdAt: Date.now()
       });
@@ -3195,10 +3199,18 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   window.__qtyIn = function(v){ return String(v==null?'':v).replace(/\s*(mt|tons?|t)\.?\s*$/i,'').trim(); };
   window.__qtyOut = function(v){ var t=String(v||'').trim(); return /^\d+(?:[.,]\d+)?$/.test(t) ? t + ' Tons' : t; };
   function __szSplit(v){ var t=String(v||'').trim(), m=t.match(/^(\d+(?:[.,]\d+)?)\s*(?:[x\u00d7*]|\s)\s*(\d+(?:[.,]\d+)?)\s*(?:cm|mm)?$/i); return m ? [m[1], m[2]] : [t.replace(/\s*cm$/i,''), '']; }
-  function __szJoin(a,b){ a=String(a||'').trim(); b=String(b||'').trim(); return (a && b) ? a + ' x ' + b + ' cm' : (a || b); }
-  window.__iqSizeSync = function(){ var h=document.getElementById('iqSize'); if(h) h.value = __szJoin(document.getElementById('iqSizeA').value, document.getElementById('iqSizeB').value); };
+  window.__iqIsRoll = false;
+  function __szJoin(a,b){ a=String(a||'').trim(); b=String(b||'').trim(); if(window.__iqIsRoll) return a ? a + ' cm' : ''; return (a && b) ? a + ' x ' + b + ' cm' : (a || b); }
+  window.__iqForm = function(f, keep){
+    window.__iqIsRoll = (f === 'rolls');
+    var fm=document.getElementById('iqSize'); var box=fm && fm.parentNode.querySelector('.szx'); if(box) box.classList.toggle('iqroll', window.__iqIsRoll);
+    var bs=document.getElementById('iqFormS'), br=document.getElementById('iqFormR'); if(bs) bs.classList.toggle('on', !window.__iqIsRoll); if(br) br.classList.toggle('on', window.__iqIsRoll);
+    if(!keep){ var b=document.getElementById('iqSizeB'); if(window.__iqIsRoll && b) b.value=''; __iqSizeSync(); }
+    renderIqRows();
+  };
+  window.__iqSizeSync = function(){ var fb=document.getElementById('iqSizeB'); if(window.__iqIsRoll && fb) fb.value=''; var h=document.getElementById('iqSize'); if(h) h.value = __szJoin(document.getElementById('iqSizeA').value, document.getElementById('iqSizeB').value); };
   window.__iqSizeLoad = function(){ var h=document.getElementById('iqSize'), p=__szSplit(h.value); document.getElementById('iqSizeA').value=p[0]; document.getElementById('iqSizeB').value=p[1]; };
-  window.__iqRowSz = function(i, el){ var td=el.parentNode.parentNode, ins=td.getElementsByTagName('input'); if(iqRows[i]) iqRows[i].size = __szJoin(ins[0].value, ins[1].value); };
+  window.__iqRowSz = function(i, el){ var td=el.parentNode.parentNode, ins=td.getElementsByTagName('input'); if(iqRows[i]) iqRows[i].size = __szJoin(ins[0].value, ins[1] ? ins[1].value : ''); };
   window.__fmtSize = function(v){
     var t = String(v == null ? '' : v).trim();
     var m = t.match(/^(\d+(?:[.,]\d+)?)\s*(?:[x\u00d7*]|\s)\s*(\d+(?:[.,]\d+)?)\s*(cm|mm)?$/i);
@@ -3208,9 +3220,9 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   function renderIqRows(){
     var el = document.getElementById('iqTbl'); if(!el) return;
     if(!iqRows.length){ el.innerHTML = ''; return; }
-    el.innerHTML = '<table class="iq-tbl"><thead><tr><th>Size</th><th>GSM</th><th>Quantity</th><th></th></tr></thead><tbody>' +
+    el.innerHTML = '<table class="iq-tbl"><thead><tr><th>' + (window.__iqIsRoll ? 'Width' : 'Size') + '</th><th>GSM</th><th>Quantity</th><th></th></tr></thead><tbody>' +
       iqRows.map(function(r, i){
-        var sp=__szSplit(r.size); return '<tr><td><div class="szx"><input value="' + escapeHtml(sp[0]) + '" inputmode="decimal" oninput="__iqRowSz(' + i + ',this)"><b>x</b><input value="' + escapeHtml(sp[1]) + '" inputmode="decimal" oninput="__iqRowSz(' + i + ',this)"></div></td>' +
+        var sp=__szSplit(r.size); return '<tr><td><div class="szx"><input value="' + escapeHtml(sp[0]) + '" inputmode="decimal" oninput="__iqRowSz(' + i + ',this)">' + (window.__iqIsRoll ? '<i>cm</i>' : '<b>x</b><input value="' + escapeHtml(sp[1]) + '" inputmode="decimal" oninput="__iqRowSz(' + i + ',this)">') + '</div></td>' +
           '<td><input value="' + escapeHtml(r.gsm) + '" oninput="this.value=this.value.replace(/\\D/g,\'\');__iqRowSet(' + i + ',\'gsm\',this.value)" inputmode="numeric" style="max-width:68px"></td>' +
           '<td><input value="' + escapeHtml(r.qty) + '" oninput="__iqRowSet(' + i + ',\'qty\',this.value)" style="max-width:84px"></td>' +
           '<td><button type="button" class="x" aria-label="Remove row" onclick="__iqRowDel(' + i + ')">&times;</button></td></tr>';
