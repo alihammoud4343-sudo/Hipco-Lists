@@ -3045,7 +3045,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     rr(tx, y, tw2, 50, 10, '#EDF1FA', null);
     txt('Details  /  \u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644', tx + c1 / 2, y + 31, 14.5, true, INK, 'center'); txt('Required Information  /  \u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629', tx + c1 + (tw2 - c1) / 2, y + 31, 14.5, true, INK, 'center'); y += 50;
     var qtyV = tonsOf(d.qty), sizeV = szOf(d.size), gsmV = String(d.gsm || '').trim();
-    var sz = (d.sizes || []).filter(function(r){ return r.size || r.gsm || r.qty; });
+    var sz = (d.sizes || []).filter(function(r){ return r.size || r.gsm || r.qty; }); if(sz.length && (d.size || d.gsm)) sz.unshift({ size: d.size || '', gsm: d.gsm || '', qty: '' });
     var rows = [['layers', 'Quality / Requested Product', d.product || '', '\u0627\u0644\u0646\u0648\u0639\u064a\u0629 / \u0627\u0644\u0645\u0646\u062a\u062c \u0627\u0644\u0645\u0637\u0644\u0648\u0628'], ['box', 'Required Quantity', qtyV, '\u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629']];
     if(sz.length) rows.push(['multi']); else rows.push(['ruler', d.form === 'rolls' ? 'Roll Width' : 'Size', sizeV, d.form === 'rolls' ? '\u0639\u0631\u0636 \u0627\u0644\u0631\u0648\u0644' : '\u0627\u0644\u0642\u064a\u0627\u0633'], ['gsm', 'Grammage (GSM)', gsmV, '\u0627\u0644\u062c\u0631\u0627\u0645\u0627\u062c']);
     rows.push(['globe', 'Destination Country', d.country || '', '\u0628\u0644\u062f \u0627\u0644\u0648\u062c\u0647\u0629']);
