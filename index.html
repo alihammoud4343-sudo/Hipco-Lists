@@ -853,7 +853,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       <div class="inq-field"><label for="iqDate"><span>Date</span><span class="ar">التاريخ</span></label><input id="iqDate" type="date"></div>
       <div class="inq-field"><label for="iqNo"><span>Inquiry No.</span><span class="ar">رقم الاستفسار</span></label><input id="iqNo" type="text" readonly></div>
       <div class="inq-field full"><label for="iqSm"><span>Salesman</span><span class="ar">اسم مندوب المبيعات</span></label>
-        <select id="iqSm"><option value="">Choose&hellip;</option><option>Ahmad</option><option>Nadine</option><option>Ouseili</option><option>Wissam</option><option>Ali</option><option>Bob</option><option>Mohamad</option></select></div>
+        <select id="iqSm"><option value="">Choose&hellip;</option><option>Ahmad</option><option>Nadine</option><option>Ouseili</option><option>Wissam</option><option>Ali</option><option>Bob</option><option>Mohamad</option><option>Soha</option></select></div>
       <div class="inq-field full" style="position:relative"><label for="iqClient"><span>Client</span><span class="ar">العميل</span></label><input id="iqClient" type="text" autocomplete="off" placeholder="Choose salesman first" style="padding-right:38px"><button type="button" class="iq-arrow" id="iqArrow" aria-label="Show clients"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="iq-sug" id="iqSug" hidden></div></div>
     </div>
     <div class="inq-sec">
@@ -902,7 +902,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     <div class="inq-sub">New reminder &middot; one per client</div>
     <div class="inq-grid">
       <div class="inq-field full"><label for="rmSm"><span>Salesman</span><span class="ar">اسم مندوب المبيعات</span></label>
-        <select id="rmSm"><option value="">Choose&hellip;</option><option>Ahmad</option><option>Nadine</option><option>Ouseili</option><option>Wissam</option><option>Ali</option><option>Bob</option><option>Mohamad</option></select></div>
+        <select id="rmSm"><option value="">Choose&hellip;</option><option>Ahmad</option><option>Nadine</option><option>Ouseili</option><option>Wissam</option><option>Ali</option><option>Bob</option><option>Mohamad</option><option>Soha</option></select></div>
       <div class="inq-field full" style="position:relative"><label for="rmClient"><span>Client</span><span class="ar">العميل</span></label><input id="rmClient" type="text" autocomplete="off" placeholder="Choose salesman first" style="padding-right:38px"><button type="button" class="iq-arrow" id="rmArrow" aria-label="Show clients"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="iq-sug" id="rmSug" hidden></div></div>
       <div class="inq-field full"><label for="rmQual"><span>Quality he wants (optional)</span><span class="ar">النوعية المطلوبة</span></label><select id="rmQual"></select></div>
       <div class="inq-field full"><label><span>GSM range (optional)</span><span class="ar">الجراماج</span></label>
@@ -1025,7 +1025,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     return db.localeCompare(da) || slNumber(b && b.reference) - slNumber(a && a.reference);
   }
 
-  var SALESMAN_ORDER = ['Ahmad','Nadine','Ouseili','Wissam','Ali','Bob','Mohamad'];
+  var SALESMAN_ORDER = ['Ahmad','Nadine','Ouseili','Wissam','Ali','Bob','Mohamad','Soha'];
   function normSalesman(s){
     var t = String(s || '').trim();
     for(var i = 0; i < SALESMAN_ORDER.length; i++){
@@ -1049,7 +1049,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   // ---------- Price / supplier lock ----------
   // price, supplier and link_supplier are stored encrypted (doc.sec). The private key is stored wrapped by the team password (meta/crypto).
   var SEC = { meta:null, priv:null, hk:null, hmap:{}, cache:{} };
-  var PROTECTED_SM = ['Ahmad','Nadine','Ali','Bob','Mohamad'];
+  var PROTECTED_SM = ['Ahmad','Nadine','Ali','Bob','Mohamad','Soha'];
   function isProtectedSm(sm){ return PROTECTED_SM.indexOf(sm) !== -1; }
   var pendingAfterUnlock = null;
   var SEC_KEYS = ['price','supplier','link_supplier'];
@@ -1294,7 +1294,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     Wissam: {en:'Mr. Wissam Ayyad',   ar:'السيد وسام عياد'},
     Ali:    {en:'Mr. Ali Hammoud',    ar:'السيد علي حمود'},
     Bob:    {en:'Mr. Ibrahim Amin',   ar:'السيد ابراهيم امين'},
-    Mohamad:{en:'Mr. Mohamad Hammoud',ar:'السيد محمد حمود'}
+    Mohamad:{en:'Mr. Mohamad Hammoud',ar:'السيد محمد حمود'},
+    Soha:   {en:'Soha',ar:'سها'}
   };
   var PDF_BASE = "https://github.com/alihammoud4343-sudo/hipco-lists/raw/main/";
   function pdfFileName(ref){ return String(ref || '').replace(/[^A-Za-z0-9_-]+/g, '_') + '.pdf'; }
@@ -2963,7 +2964,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   function fmtInqDate(k){ try{ return longDay(k); }catch(e){ return k || ''; } }
   function renderInq(){
     var sel = document.getElementById('iqFilter');
-    var sms = ['Ahmad','Nadine','Ouseili','Wissam','Ali','Bob','Mohamad'];
+    var sms = ['Ahmad','Nadine','Ouseili','Wissam','Ali','Bob','Mohamad','Soha'];
     sel.innerHTML = '<option value="">All salesmen</option>' + sms.map(function(x){ return '<option' + (inqFilter === x ? ' selected' : '') + '>' + x + '</option>'; }).join('');
     var sel2 = document.getElementById('iqFilterSt');
     sel2.innerHTML = '<option value="">All statuses</option>' + Object.keys(INQ_STATUS).map(function(k){ return '<option value="' + k + '"' + (inqFilterSt === k ? ' selected' : '') + '>' + INQ_STATUS[k].en + '</option>'; }).join('');
@@ -3514,7 +3515,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
 
   // ---------- Reminders (db collection "reminders"): each salesman keeps his own client reminders ----------
   var remDocs = [], remFilter = '', remFilterSt = 'open', remBusy = false, remArm = {};
-  var REM_SMS = ['Ahmad','Nadine','Ouseili','Wissam','Ali','Bob','Mohamad'];
+  var REM_SMS = ['Ahmad','Nadine','Ouseili','Wissam','Ali','Bob','Mohamad','Soha'];
   function remNums(s){ return (String(s || '').match(/\d+/g) || []).map(Number).filter(function(n){ return n >= 20 && n <= 1000; }); }
   function remMatches(r){
     // lists added AFTER the reminder was made, still available, matching quality and overlapping GSM
