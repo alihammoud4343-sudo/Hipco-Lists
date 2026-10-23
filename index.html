@@ -1936,7 +1936,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var factsHtml = facts.join('<span class="sep">&middot;</span>');
 
     var extraChips = (d.origin ? '<div class="chip">Origin : ' + escapeHtml(d.origin) + '</div>' : '') +
-                     (d.supplier ? '<div class="chip">' + escapeHtml(d.supplier) + '</div>' : '');
+                     (d.supplier ? '<div class="chip">' + escapeHtml(d.supplier) + '</div>' : '') +
+                     (d.mill ? '<div class="chip">Mill : ' + escapeHtml(d.mill) + '</div>' : '');
 
     var details =
       (extraChips ? '<div class="chiprow">' + extraChips + '</div>' : '') +
