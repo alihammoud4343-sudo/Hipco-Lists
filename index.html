@@ -269,6 +269,27 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .ar-details{ font-family:var(--f-arabic); font-size:13.5px; font-weight:500; line-height:1.7; color:var(--ink); background:var(--chip); border-radius:12px; padding:9px 12px; }
   .filenote{ font-size:10.5px; color:var(--ink-2); word-break:break-word; }
 
+
+  .sc-btn{ display:flex; align-items:center; justify-content:center; width:100%; height:42px; margin-top:8px; background:#fff; color:var(--hero-a); border:1.5px solid var(--hero-a); border-radius:14px; font-size:13.5px; font-weight:700; cursor:pointer; }
+  .sc-btn:active{ transform:scale(0.99); }
+  #scModal{ position:fixed; inset:0; z-index:9999; background:#fff; overflow:auto; display:none; -webkit-overflow-scrolling:touch; }
+  #scModal.on{ display:block; }
+  #scBar{ position:sticky; top:0; display:flex; gap:8px; padding:10px 12px; background:#12275C; z-index:2; }
+  #scBar button{ flex:1; height:40px; border:none; border-radius:10px; font-size:13.5px; font-weight:700; background:#fff; color:#12275C; cursor:pointer; }
+  #scBody{ max-width:760px; margin:0 auto; padding:16px 18px 40px; direction:rtl; font-family:'Noto Naskh Arabic','Geeza Pro','Segoe UI',Tahoma,sans-serif; color:#1b2a45; font-size:16px; line-height:1.9; }
+  #scBody .sctop{ display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #1F4283; padding-bottom:8px; margin-bottom:12px; }
+  #scBody h1{ margin:0; font-size:20px; color:#1F4283; }
+  #scBody .scref{ font-size:11px; color:#555; direction:ltr; text-align:right; }
+  #scBody .scfacts{ background:#EEF1F8; border-right:5px solid #12275C; padding:8px 14px; margin-bottom:4px; font-size:14px; }
+  #scBody h2{ font-size:14px; color:#fff; background:#1F4283; padding:1px 14px; margin:14px 0 6px; display:inline-block; border-radius:3px; }
+  #scBody .scsay{ border:1px solid #c9d3e8; border-radius:8px; padding:8px 14px; }
+  #scBody ol{ margin:0; padding-right:22px; font-weight:800; color:#12275C; }
+  #scBody table{ width:100%; border-collapse:collapse; direction:ltr; font-size:12.5px; margin-top:6px; }
+  #scBody th{ background:#1F4283; color:#fff; padding:4px 6px; text-align:center; }
+  #scBody td{ padding:4px 6px; border:1px solid #c9d3e8; text-align:center; }
+  #scBody tr.me td{ background:#EEF1F8; font-weight:800; color:#12275C; }
+  #scBody .scnote{ font-size:11px; color:#666; margin-top:14px; border-top:1px solid #ddd; padding-top:6px; line-height:1.6; }
+  @media print{ body > *:not(#scModal){ display:none !important; } #scModal{ position:static; display:block !important; overflow:visible; } #scBar{ display:none !important; } #scBody{ font-size:12.5px; line-height:1.7; padding:0; max-width:none; } @page{ size:A4; margin:10mm 14mm; } }
   .pdf-btn{
     display:flex; align-items:center; justify-content:center; gap:8px;
     width:100%; height:46px;
@@ -1939,6 +1960,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
                      (d.supplier ? '<div class="chip">' + escapeHtml(d.supplier) + '</div>' : '') +
                      (d.mill ? '<div class="chip">Mill : ' + escapeHtml(d.mill) + '</div>' : '');
 
+    window.__SC = window.__SC || {}; if(d.script) window.__SC[docId] = d;
     var details =
       (extraChips ? '<div class="chiprow">' + extraChips + '</div>' : '') +
       '<div class="meta-line">' +
@@ -1948,6 +1970,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       '</div>' +
       '<div class="ar-details" dir="rtl">' + escapeHtml(arCardLine(d)) + '</div>' +
       (d.pdf_url ? '<button type="button" class="pdf-btn" data-pdf="' + escapeHtml(d.pdf_url) + '" data-ref="' + escapeHtml(d.reference || 'report') + '">' + PDF_ICON + '<span>Open PDF report</span></button>' : '') +
+      (d.script && d.script.sections ? '<button type="button" class="sc-btn" data-sc="' + escapeHtml(docId) + '"><span>Script &middot; \u0633\u0643\u0631\u0628\u062a</span></button>' : '') +
       '<button type="button" class="crm-btn' + (crm ? ' on' : '') + '" onclick="__setOfferStatus(\'' + jsStr(docId) + '\',\'' + (crm ? 'available' : 'crm') + '\')">' + (crm ? '✔ Waiting for CRM approval — tap when sent / done' : '⏳ Mark: waiting CRM approval') + '</button>' +
       clientMatchHtml(d);
 
@@ -3688,4 +3711,35 @@ document.addEventListener('click', function(ev){
 </script>
 <script src="notify.js?v=5"></script><script src="bell.js?v=6"></script>
 <script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");</script>
+
+<div id="scModal" role="dialog" aria-label="Call script"><div id="scBar"><button type="button" id="scClose">Close &middot; \u0625\u063a\u0644\u0627\u0642</button><button type="button" id="scPrint">Print / Save PDF &middot; \u0637\u0628\u0627\u0639\u0629</button></div><div id="scBody"></div></div>
+<script>
+(function(){
+  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function ltr(t){ return esc(t).replace(/\{\{(.+?)\}\}/g,'<span style="direction:ltr;unicode-bidi:embed;display:inline-block">$1</span>'); }
+  function build(d){
+    var sc = d.script, h = '<div class="sctop"><div><h1>' + ltr(sc.title) + '</h1><div class="scref">' + esc(d.reference) + '</div></div><img src="img/logo-blue.png" alt="HIPCO" style="height:42px"></div>';
+    if(sc.facts) h += '<div class="scfacts">' + ltr(sc.facts) + '</div>';
+    (sc.sections || []).forEach(function(x){
+      h += '<h2>' + ltr(x.t) + '</h2><div class="scsay">';
+      if(x.text) h += ltr(x.text);
+      if(x.items) h += '<ol>' + x.items.map(function(i){ return '<li>' + ltr(i) + '</li>'; }).join('') + '</ol>';
+      if(x.table){ h += '<table><tr>' + x.table.head.map(function(c){ return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>' + x.table.rows.map(function(r,ix){ return '<tr' + (x.table.hl && ix===0 ? ' class="me"' : '') + '>' + r.map(function(c){ return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>'; }
+      h += '</div>';
+    });
+    if(sc.note) h += '<div class="scnote">' + ltr(sc.note) + '</div>';
+    return h;
+  }
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest && ev.target.closest('.sc-btn'); if(!b) return;
+    var id = b.getAttribute('data-sc'), d = null;
+    d = (window.__SC || {})[id] || null;
+    if(!d || !d.script) return;
+    document.getElementById('scBody').innerHTML = build(d);
+    document.getElementById('scModal').className = 'on';
+  });
+  document.getElementById('scClose').addEventListener('click', function(){ document.getElementById('scModal').className = ''; });
+  document.getElementById('scPrint').addEventListener('click', function(){ window.print(); });
+})();
+</script>
 </body></html>
