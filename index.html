@@ -656,8 +656,13 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .inq-err{ color:var(--sold); font-size:13px; min-height:18px; margin-top:8px; text-align:center; }
   .inq-list-h{ display:flex; align-items:center; justify-content:space-between; margin:22px 2px 10px; }
   .inq-total{ margin:-2px 2px 12px; padding:9px 12px; border-radius:12px; background:var(--chip); color:var(--ink); font-size:13px; font-weight:600; }
-  .inq-total b{ font-size:16px; }
-  .inq-by{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .inq-total{ text-align:center; }
+  .inq-total b{ font-size:20px; }
+  .it-n{ font-size:15px; font-weight:700; white-space:nowrap; }
+  .it-sh{ font-weight:600; font-size:12.5px; opacity:.7; }
+  .it-r{ margin-top:6px; display:block; font-size:12px; font-weight:700; white-space:nowrap; background:rgba(0,0,0,.07); border-radius:8px; padding:4px 6px; }
+  .inq-by{ justify-content:center; }
+  .inq-by{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
   .inq-by button{ border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:999px; padding:4px 11px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; }
   .inq-by button b{ font-size:12.5px; margin-left:3px; }
   .inq-by button.on{ background:var(--hero-a); color:#fff; border-color:var(--hero-a); }
@@ -2988,7 +2993,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(tot){
       var ds = inqDocs.map(function(d){ return d.date || ''; }).filter(Boolean).sort();
       var rng = ds.length ? (ds[0] === ds[ds.length - 1] ? fmtInqDate(ds[0]) : fmtInqDate(ds[0]) + ' \u2192 ' + fmtInqDate(ds[ds.length - 1])) : '';
-      tot.innerHTML = '<b>' + inqDocs.length + '</b> ' + (inqDocs.length === 1 ? 'inquiry' : 'inquiries') + (rng ? ' &middot; ' + rng : '') + (list.length !== inqDocs.length ? ' &middot; showing ' + list.length : '');
+      tot.innerHTML = '<div class="it-n"><b>' + inqDocs.length + '</b> ' + (inqDocs.length === 1 ? 'inquiry' : 'inquiries') + (list.length !== inqDocs.length ? ' <span class="it-sh">&middot; showing ' + list.length + '</span>' : '') + '</div>' + (rng ? '<div class="it-r">' + rng + '</div>' : '');
       var cnt = {}; inqDocs.forEach(function(d){ var k = d.salesman || 'Other'; cnt[k] = (cnt[k] || 0) + 1; });
       var order = sms.concat(Object.keys(cnt).filter(function(k){ return sms.indexOf(k) < 0; }));
       tot.innerHTML += '<div class="inq-by">' + order.filter(function(k){ return cnt[k]; }).map(function(k){
