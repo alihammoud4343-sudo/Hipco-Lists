@@ -657,6 +657,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .inq-list-h{ display:flex; align-items:center; justify-content:space-between; margin:22px 2px 10px; }
   .inq-total{ margin:-2px 2px 12px; padding:9px 12px; border-radius:12px; background:var(--chip); color:var(--ink); font-size:13px; font-weight:600; }
   .inq-total b{ font-size:16px; }
+  .inq-by{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .inq-by button{ border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:999px; padding:4px 11px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; }
+  .inq-by button b{ font-size:12.5px; margin-left:3px; }
+  .inq-by button.on{ background:var(--hero-a); color:#fff; border-color:var(--hero-a); }
   .inq-list-h h3{ margin:0; font:400 22px var(--f-display); color:var(--ink); }
   .inq-list-h select{ font:inherit; font-size:13px; padding:7px 10px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
   .inq-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:14px; margin-bottom:10px; }
@@ -2971,6 +2975,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   function inqStatus(d){ var s = d.status === 'answered' ? 'price' : (d.status || 'open'); return INQ_STATUS[s] ? s : 'open'; }
   function fmtStamp(ts, dayKey){ try{ if(!ts) return dayKey ? fmtInqDate(dayKey) : ''; var d = new Date(ts), o = { timeZone: 'Asia/Beirut' }; return d.toLocaleDateString('en-GB', Object.assign({ day: 'numeric', month: 'short', year: 'numeric' }, o)) + ' \u00b7 ' + d.toLocaleTimeString('en-GB', Object.assign({ hour: '2-digit', minute: '2-digit', hour12: false }, o)); }catch(e){ return dayKey || ''; } }
   function fmtInqDate(k){ try{ return longDay(k); }catch(e){ return k || ''; } }
+  window.__iqChip = function(n){ inqFilter = (inqFilter === n ? '' : n); renderInq(); };
   function renderInq(){
     var sel = document.getElementById('iqFilter');
     var sms = ['Ahmad','Nadine','Ouseili','Wissam','Ali','Bob','Mohamad','Soha'];
@@ -2984,6 +2989,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       var ds = inqDocs.map(function(d){ return d.date || ''; }).filter(Boolean).sort();
       var rng = ds.length ? (ds[0] === ds[ds.length - 1] ? fmtInqDate(ds[0]) : fmtInqDate(ds[0]) + ' \u2192 ' + fmtInqDate(ds[ds.length - 1])) : '';
       tot.innerHTML = '<b>' + inqDocs.length + '</b> ' + (inqDocs.length === 1 ? 'inquiry' : 'inquiries') + (rng ? ' &middot; ' + rng : '') + (list.length !== inqDocs.length ? ' &middot; showing ' + list.length : '');
+      var cnt = {}; inqDocs.forEach(function(d){ var k = d.salesman || 'Other'; cnt[k] = (cnt[k] || 0) + 1; });
+      var order = sms.concat(Object.keys(cnt).filter(function(k){ return sms.indexOf(k) < 0; }));
+      tot.innerHTML += '<div class="inq-by">' + order.filter(function(k){ return cnt[k]; }).map(function(k){
+        return '<button type="button" class="' + (inqFilter === k ? 'on' : '') + '" onclick="__iqChip(\'' + k.replace(/'/g, '') + '\')">' + escapeHtml(k) + ' <b>' + cnt[k] + '</b></button>'; }).join('') + '</div>';
       tot.hidden = !inqDocs.length;
     }
     var el = document.getElementById('iqList');

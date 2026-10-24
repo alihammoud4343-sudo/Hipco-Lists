@@ -23,18 +23,20 @@ const cur = {}; for (const c of COLS) { cur[c] = {}; for (const r of await getRo
 const sr = await fetch(`${U}/rest/v1/kv?select=data&col=eq.meta&id=eq.notify_state`, { headers: H() }); const sj = sr.ok ? await sr.json() : [];
 const old = sj[0] && sj[0].data && sj[0].data.seen ? sj[0].data.seen : null;
 note('rows', COLS.map(c => c + '=' + Object.keys(cur[c]).length).join(' ') + (old ? '' : ' (first run: baseline)'));
+// shown inquiry number = position among the inquiries that still exist (oldest first), same rule as the app
+const inqRank = (() => { const m = {}; Object.values(cur.inquiries || {}).sort((x, y) => (+x.d.createdAt || 0) - (+y.d.createdAt || 0) || ((parseInt(x.d.no, 10) || 0) - (parseInt(y.d.no, 10) || 0))).forEach((r, i) => { m[r.id] = i + 1; }); return m; })();
 const ev = [];   // {title, body}
 const sentG = {}, ansG = {};
 const dayAgo = Date.now() - 24 * 3600 * 1000;
 for (const c of COLS) for (const [k, { id, d }] of Object.entries(cur[c])) {
   const o = old && old[c] && old[c][k], isNew = old ? !o : false, changed = o && o[0] !== sig(d);
   if (!old) {   // baseline: only announce today's inquiries / reminders that nobody was told about
-    if ((c === 'inquiries' || c === 'reminders') && +d.createdAt >= dayAgo) { if (c === 'inquiries') ev.push({ title: 'New inquiry ' + (d.no ? 'INQ-' + String(d.no).replace(/\D/g, '').padStart(3, '0') : ''), body: `${d.salesman || ''}: ${d.client || ''} · ${d.product || ''}${d.qty ? ' · ' + d.qty : ''}` }); else ev.push({ title: 'New reminder', body: `${d.salesman || ''}: ${d.client || ''}${d.note ? ' — ' + d.note : ''}` }); }
+    if ((c === 'inquiries' || c === 'reminders') && +d.createdAt >= dayAgo) { if (c === 'inquiries') ev.push({ title: 'New inquiry ' + (inqRank[id] ? 'INQ-' + String(inqRank[id]).padStart(3, '0') : ''), body: `${d.salesman || ''}: ${d.client || ''} · ${d.product || ''}${d.qty ? ' · ' + d.qty : ''}` }); else ev.push({ title: 'New reminder', body: `${d.salesman || ''}: ${d.client || ''}${d.note ? ' — ' + d.note : ''}` }); }
     continue;
   }
   if (!isNew && !changed) continue;
   if (c === 'inquiries') {
-    if (isNew) ev.push({ title: 'New inquiry ' + (d.no ? 'INQ-' + String(d.no).replace(/\D/g, '').padStart(3, '0') : ''), body: `${d.salesman || ''}: ${d.client || ''} · ${d.product || ''}${d.qty ? ' · ' + d.qty : ''}${d.country ? ' · ' + d.country : ''}` });
+    if (isNew) ev.push({ title: 'New inquiry ' + (inqRank[id] ? 'INQ-' + String(inqRank[id]).padStart(3, '0') : ''), body: `${d.salesman || ''}: ${d.client || ''} · ${d.product || ''}${d.qty ? ' · ' + d.qty : ''}${d.country ? ' · ' + d.country : ''}` });
     else if (o[1] !== (d.status || '')) ev.push({ title: 'Inquiry update', body: `${d.client || ''} (${d.salesman || ''}): ${INQ[d.status] || d.status || 'updated'}` });
   } else if (c === 'reminders') {
     if (isNew) ev.push({ title: 'New reminder', body: `${d.salesman || ''}: ${d.client || ''}${d.quality ? ' · ' + d.quality : ''}${d.note ? ' — ' + d.note : ''}` });
