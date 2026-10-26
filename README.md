@@ -16,3 +16,6 @@ rebuilt with tools/build_vault.mjs and pushed; each list's PDF sits next to inde
 
 ## Client line picking
 PDFs are tickable forms (one box next to each numbered line, none next to quality headings). The yellow "TAP HERE" button was removed on request (`tools/remove_pick_button.py`); the tap-to-select page `pick.html` + `data/lines.json` still exist but are not linked from the PDFs.
+
+## GSM / size / type filter
+`tools/index_lines.py` reads every SL*.pdf in the repo and writes `data/lines_index.json` (each numbered line: quality, GSM, width/length in cm, reel or sheet, tons). The app's "Filter by GSM & size" panel uses it. Run it (or `tools/sync.sh`) after adding a new list PDF, and check the printed tons against the list total. The search also reads the mill field.

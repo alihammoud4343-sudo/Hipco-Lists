@@ -5,6 +5,7 @@ set -e
 cd "$(dirname "$0")/.."
 mkdir -p "$1/inquiries" "$1/followup" "$1/sent" "$1/reminders"
 node tools/build_vault.mjs "$1" .
+python3 tools/index_lines.py >/dev/null   # line items of every PDF -> data/lines_index.json (GSM / size filter)
 # keep each report PDF named after its reference next to the app (PDFs are added by Claude when a list is approved)
 if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then echo "APP ALREADY UP TO DATE"; exit 0; fi
 git add -A
