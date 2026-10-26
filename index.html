@@ -3105,7 +3105,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(har) har.textContent = (m === 'inq') ? 'طلب أسعار' : (m === 'rem') ? 'تذكيرات' : 'متوفر في الخارج';
     window.scrollTo(0, 0);
     if(m === 'inq'){ inqFormReset(false); renderInq(); }
-    if(m === 'rem'){ if(remMe && !remTeam) remFilter = remMe; renderRem(); }
+    if(m === 'rem'){ remTeam = true; remFilter = ''; remQ = ''; var rq = document.getElementById('rmQ'); if(rq) rq.value = ''; renderRem(); }   // always opens on ALL salesmen
     if(stock) render();
   };
   function pad3(n){ return ('000' + n).slice(-3); }
