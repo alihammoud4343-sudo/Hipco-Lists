@@ -676,6 +676,14 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .rem-seg{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:var(--chip); border-radius:14px; padding:4px; margin:0 0 14px; }
   .rem-seg button{ border:0; background:transparent; color:var(--ink-2); font:inherit; font-size:14px; font-weight:700; height:40px; border-radius:11px; cursor:pointer; }
   .rem-seg button.on{ background:var(--navy); color:#fff; box-shadow:0 4px 12px rgba(15,27,61,.25); }
+  .rem-q{ width:100%; height:46px; border:1px solid var(--line); border-radius:14px; background:var(--surface); color:var(--ink); padding:0 14px; font:inherit; font-size:15px; margin-bottom:10px; outline:none; box-sizing:border-box; }
+  .rem-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .rem-chips button{ border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:999px; padding:6px 12px; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+  .rem-chips button b{ margin-left:4px; color:var(--ink-2); }
+  .rem-chips button.on{ background:var(--navy); border-color:var(--navy); color:#fff; } .rem-chips button.on b{ color:rgba(255,255,255,.8); }
+  .rem-card .who{ display:inline-block; margin-bottom:5px; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; background:#FBE3E6; color:#B0374A; border-radius:6px; padding:3px 8px; }
+  .rem-snz{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; align-items:center; font-size:12px; font-weight:700; color:var(--ink-2); }
+  .rem-snz button{ font:inherit; font-size:12.5px; font-weight:700; padding:6px 11px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer; }
   .rem-grp{ display:flex; align-items:center; gap:8px; margin:18px 2px 8px; font-size:11.5px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-2); }
   .rem-grp i{ width:8px; height:8px; border-radius:50%; background:var(--navy); display:inline-block; }
   .rem-grp.red{ color:#B0374A; } .rem-grp.red i{ background:#B0374A; }
@@ -687,7 +695,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .rem-card .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .rem-card .chips span{ font-size:11.5px; font-weight:700; background:var(--chip); color:var(--navy-ink); border-radius:999px; padding:4px 10px; }
   .rem-card .foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
-  .rem-card .foot .meta{ margin:0; }
+  .rem-card .foot{ flex-wrap:wrap; }
+  .rem-card .foot .meta{ margin:0; flex:1 1 100%; }
+  .rem-card .foot .acts{ flex:1 1 100%; justify-content:flex-end; }
+  .rem-card .acts button{ white-space:nowrap; }
   .rem-card .foot .acts{ margin:0; }
   .rem-card .acts button.pri{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:700; }
   .home-card .bdg{ display:inline-block; margin-top:5px; font-size:12px; font-weight:700; color:#146B3A; background:#E3F4EA; border-radius:999px; padding:3px 9px; }
@@ -1012,6 +1023,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     <div class="inq-err" id="rmErr" role="alert"></div>
   </form>
   <div class="inq-list-h" id="rmHead"><h3>Reminders</h3><div style="display:flex;gap:6px"><select id="rmFilter" aria-label="Filter by salesman"></select><select id="rmFilterSt" aria-label="Filter by status" style="display:none"></select></div></div>
+  <input class="rem-q" id="rmQ" type="search" placeholder="Search client or note" autocomplete="off" aria-label="Search reminders">
+  <div class="rem-chips" id="rmChips"></div>
   <div class="rem-seg" id="rmSeg"></div>
   <div id="rmList"></div>
 </section>
@@ -3731,7 +3744,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   }
 
   // ---------- Reminders (db collection "reminders"): each salesman keeps his own client reminders ----------
-  var remDocs = [], remFilter = '', remFilterSt = 'open', remBusy = false, remArm = {};
+  var remDocs = [], remQ = '', remSnz = '', remFilter = '', remFilterSt = 'open', remBusy = false, remArm = {};
   var REM_SMS = ['Ahmad','Nadine','Ouseili','Wissam','Ali','Bob','Mohamad','Soha'];
   function remNums(s){ return (String(s || '').match(/\d+/g) || []).map(Number).filter(function(n){ return n >= 20 && n <= 1000; }); }
   function remMatches(r){
@@ -3770,12 +3783,16 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   window.__remTeam = function(v){ remTeam = v; remFilter = v ? '' : remMe; renderRem(); };
   var remFormOpen = false;
   window.__remNew = function(){ remFormOpen = !remFormOpen; renderRem(); if(remFormOpen){ try{ document.getElementById('remForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); }catch(e){} } };
+  window.__remWho2 = function(n){ remFilter = n; renderRem(); };
+  window.__remSnzOpen = function(id){ remSnz = (remSnz === id ? '' : id); renderRem(); };
+  window.__remSnooze = async function(id, days){ if(!dbRef) return; var d = new Date(); d.setDate(d.getDate() + days); try{ await dbRef.doc('reminders/' + id).update({ due: ymd(d) }); remSnz = ''; showToast('Moved to ' + fmtInqDate(ymd(d))); }catch(e){ showToast('Could not save (no permission)'); } };
+  document.getElementById('rmQ').addEventListener('input', function(){ remQ = this.value; renderRem(); });
   window.__remSt = function(v){ remFilterSt = v; renderRem(); };
   function renderRem(){
     var who = document.getElementById('rmWho'), pick = false; remTeam = true;   // everyone sees every reminder: no name to pick
     ['rmHead','rmList','rmSeg','rmNew'].forEach(function(k){ document.getElementById(k).style.display = pick ? 'none' : ''; });
     document.getElementById('remForm').style.display = (pick || !remFormOpen) ? 'none' : '';
-    document.getElementById('rmHead').style.display = (pick || !remTeam) ? 'none' : '';
+    document.getElementById('rmHead').style.display = 'none';
     var nb = document.getElementById('rmNew'); nb.classList.toggle('open', remFormOpen); nb.innerHTML = remFormOpen ? '&times; Close &middot; إغلاق' : '+ New reminder &middot; تذكير جديد';
     if(pick){
       who.innerHTML = '<div class="inq-form" style="text-align:center"><div class="inq-title" style="font-family:var(--f-display)">Who are you?</div><div class="inq-sub">Pick your name once &mdash; you will see only your own reminders</div><div class="inq-types" style="justify-content:center">' +
@@ -3796,27 +3813,31 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     sel.innerHTML = '<option value="">All salesmen</option>' + REM_SMS.map(function(x){ return '<option' + (remFilter === x ? ' selected' : '') + '>' + x + '</option>'; }).join('');
     var s2 = document.getElementById('rmFilterSt');
     s2.innerHTML = [['open','Open'],['done','Done'],['','All']].map(function(o){ return '<option value="' + o[0] + '"' + (remFilterSt === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
-    var list = remDocs.filter(function(r){ return (!remFilter || r.salesman === remFilter) && (!remFilterSt || (r.status === 'done' ? 'done' : 'open') === remFilterSt); });
+    var qq = remQ.trim().toLowerCase();
+    var base = remDocs.filter(function(r){ return (!remFilterSt || (r.status === 'done' ? 'done' : 'open') === remFilterSt) && (!qq || ((r.client || '') + ' ' + (r.note || '') + ' ' + (r.quality || '')).toLowerCase().indexOf(qq) !== -1); });
+    var cn = {}; base.forEach(function(r){ var k = r.salesman || 'Other'; cn[k] = (cn[k] || 0) + 1; });
+    var names = Object.keys(cn).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); });
+    if(remFilter && !cn[remFilter]) names.push(remFilter);
+    document.getElementById('rmChips').innerHTML = '<button type="button" class="' + (!remFilter ? 'on' : '') + '" onclick="__remWho2(\'\')">All salesmen<b>' + base.length + '</b></button>' + names.map(function(n){ return '<button type="button" class="' + (remFilter === n ? 'on' : '') + '" onclick="__remWho2(\'' + jsStr(n) + '\')">' + escapeHtml(n) + '<b>' + (cn[n] || 0) + '</b></button>'; }).join('');
+    var list = base.filter(function(r){ return !remFilter || r.salesman === remFilter; });
     var el = document.getElementById('rmList');
     if(!list.length){ el.innerHTML = '<div class="empty">No reminders here yet.</div>'; return; }
     var today = todayKey(), html = '';
     function card(r){
       var id = jsStr(r._id), done = r.status === 'done', ms = done ? [] : remMatches(r), dueNow = !done && r.due && r.due <= today;
       var chips = [r.quality, (r.gsmFrom || r.gsmTo) ? ((r.gsmFrom || r.gsmTo) + (r.gsmTo && r.gsmTo !== r.gsmFrom && r.gsmFrom ? '\u2013' + r.gsmTo : '') + ' GSM') : ''].filter(Boolean);
-      return '<div class="rem-card' + (done ? ' done' : (dueNow ? ' due' : (ms.length ? ' hit' : ''))) + '"><div class="top"><div class="cl">' + escapeHtml(r.client || '') + '</div>' +
+      return '<div class="rem-card' + (done ? ' done' : (dueNow ? ' due' : (ms.length ? ' hit' : ''))) + '"><div class="top"><div><div class="who">' + escapeHtml(r.salesman || 'Other') + '</div><div class="cl">' + escapeHtml(r.client || '') + '</div></div>' +
         (done ? '<span class="st">Done</span>' : (dueNow ? '<span class="st due">Due ' + escapeHtml(fmtInqDate(r.due)) + '</span>' : (r.due ? '<span class="st">' + escapeHtml(fmtInqDate(r.due)) + '</span>' : ''))) + '</div>' +
         (chips.length ? '<div class="chips">' + chips.map(function(c){ return '<span>' + escapeHtml(c) + '</span>'; }).join('') + '</div>' : '') +
         (r.note ? '<div class="nt">' + escapeHtml(r.note) + '</div>' : '') +
         (ms.length ? '<div class="rem-match">\uD83D\uDD14 New list matches' + ms.slice(0, 4).map(function(d){ return '<div>' + escapeHtml((d.reference || '').split('-')[0] || d.reference || '') + ' \u00b7 ' + escapeHtml(d.quality_group || '') + ' \u00b7 ' + escapeHtml(d.gsm || '') + ' \u00b7 ' + escapeHtml(d.qty_mt || '') + '</div>'; }).join('') + '</div>' : '') +
-        '<div class="foot"><div class="meta">' + (remTeam ? escapeHtml(r.salesman || '') + ' \u00b7 ' : '') + 'Added ' + escapeHtml(fmtStamp(r.createdAt, r.date)) + '</div><div class="acts"><button type="button" class="' + (done ? '' : 'pri') + '" onclick="__remDone(\'' + id + '\',' + (done ? 'false' : 'true') + ')">' + (done ? 'Reopen' : '\u2713 Done') + '</button>' +
-        '<button type="button" onclick="__remDel(this,\'' + id + '\')">Delete</button></div></div></div>';
+        '<div class="foot"><div class="meta">Added ' + escapeHtml(fmtStamp(r.createdAt, r.date)) + '</div><div class="acts"><button type="button" class="' + (done ? '' : 'pri') + '" onclick="__remDone(\'' + id + '\',' + (done ? 'false' : 'true') + ')">' + (done ? 'Reopen' : '\u2713 Done') + '</button>' +
+        (done ? '' : '<button type="button" onclick="__remSnzOpen(\'' + id + '\')">Snooze</button>') + '<button type="button" onclick="__remDel(this,\'' + id + '\')">Delete</button></div></div>' +
+        (remSnz === r._id ? '<div class="rem-snz">Remind me again in <button type="button" onclick="__remSnooze(\'' + id + '\',1)">1 day</button><button type="button" onclick="__remSnooze(\'' + id + '\',3)">3 days</button><button type="button" onclick="__remSnooze(\'' + id + '\',7)">1 week</button></div>' : '') + '</div>';
     }
     function byDue(a, b){ return (a.due || '9999').localeCompare(b.due || '9999') || (remMatches(b).length ? 1 : 0) - (remMatches(a).length ? 1 : 0) || (b.createdAt || 0) - (a.createdAt || 0); }
     function grp(t, cls, rs){ return rs.length ? '<div class="rem-grp ' + cls + '"><i></i>' + t + '<em>' + rs.length + '</em></div>' + rs.map(card).join('') : ''; }
-    if(remTeam){
-      var by = {}; list.forEach(function(r){ (by[r.salesman || 'Other'] = by[r.salesman || 'Other'] || []).push(r); });
-      Object.keys(by).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); }).forEach(function(n){ html += grp(escapeHtml(n), '', by[n].sort(byDue)); });
-    } else {
+    {
       var op = list.filter(function(r){ return r.status !== 'done'; }), dn = list.filter(function(r){ return r.status === 'done'; });
       html += grp('Overdue', 'red', op.filter(function(r){ return r.due && r.due < today; }).sort(byDue));
       html += grp('Today', 'amber', op.filter(function(r){ return r.due === today; }).sort(byDue));
