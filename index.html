@@ -661,6 +661,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .rem-card .acts button.sure{ background:#B0374A; color:#fff; border-color:#B0374A; }
   .rem-sm{ margin:16px 2px 8px; font-weight:700; font-size:14px; color:var(--navy-ink); display:flex; justify-content:space-between; }
   .rem-two{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  #rmHead{ margin:0 2px 12px; justify-content:flex-end; } #rmHead h3{ display:none; }
   .rem-hd{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin:2px 2px 12px; }
   .rem-hd .nm{ font:400 22px var(--f-display); color:var(--ink); }
   .rem-hd .lk{ font-size:12.5px; font-weight:600; color:var(--ink-2); }
@@ -3771,7 +3772,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   window.__remNew = function(){ remFormOpen = !remFormOpen; renderRem(); if(remFormOpen){ try{ document.getElementById('remForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); }catch(e){} } };
   window.__remSt = function(v){ remFilterSt = v; renderRem(); };
   function renderRem(){
-    var who = document.getElementById('rmWho'), pick = !remMe;
+    var who = document.getElementById('rmWho'), pick = false; remTeam = true;   // everyone sees every reminder: no name to pick
     ['rmHead','rmList','rmSeg','rmNew'].forEach(function(k){ document.getElementById(k).style.display = pick ? 'none' : ''; });
     document.getElementById('remForm').style.display = (pick || !remFormOpen) ? 'none' : '';
     document.getElementById('rmHead').style.display = (pick || !remTeam) ? 'none' : '';
@@ -3785,11 +3786,11 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var scope = remTeam ? remDocs : remDocs.filter(function(r){ return r.salesman === remMe; }), tdy = todayKey();
     var openS = scope.filter(function(r){ return r.status !== 'done'; });
     var nDue = openS.filter(function(r){ return r.due && r.due <= tdy; }).length, nHit = openS.filter(function(r){ return remMatches(r).length; }).length, nDone = scope.length - openS.length;
-    who.innerHTML = '<div class="rem-hd"><div class="nm">' + (remTeam ? 'Team reminders' : escapeHtml(remMe) + '&rsquo;s reminders') + '</div><div class="lk"><a href="#" onclick="__remTeam(' + (remTeam ? 'false' : 'true') + ');return false">' + (remTeam ? 'My reminders' : 'Team view') + '</a> &middot; <a href="#" onclick="__remChange();return false" style="color:var(--ink-2)">Not you?</a></div></div>' +
+    who.innerHTML = '<div class="rem-hd"><div class="nm">All reminders</div></div>' +
       '<div class="rem-tiles"><div class="rem-tile"><b>' + openS.length + '</b><span>Open</span></div><div class="rem-tile' + (nDue ? ' red' : '') + '"><b>' + nDue + '</b><span>Due</span></div><div class="rem-tile' + (nHit ? ' green' : '') + '"><b>' + nHit + '</b><span>List match</span></div><div class="rem-tile"><b>' + nDone + '</b><span>Done</span></div></div>';
     document.getElementById('rmSeg').innerHTML = [['open','Open'],['done','Done'],['','All']].map(function(o){ return '<button type="button" class="' + (remFilterSt === o[0] ? 'on' : '') + '" onclick="__remSt(\'' + o[0] + '\')">' + o[1] + '</button>'; }).join('');
     if(!remTeam){ remFilter = remMe; }
-    var sm = document.getElementById('rmSm'); if(!sm.value) sm.value = remMe; document.getElementById('rmClient').placeholder = sm.value ? 'Choose from the list or type' : 'Choose salesman first';
+    var sm = document.getElementById('rmSm'); if(!sm.value && remMe) sm.value = remMe; document.getElementById('rmClient').placeholder = sm.value ? 'Choose from the list or type' : 'Choose salesman first';
     remFillForm();
     var sel = document.getElementById('rmFilter'); sel.style.display = remTeam ? '' : 'none';
     sel.innerHTML = '<option value="">All salesmen</option>' + REM_SMS.map(function(x){ return '<option' + (remFilter === x ? ' selected' : '') + '>' + x + '</option>'; }).join('');
