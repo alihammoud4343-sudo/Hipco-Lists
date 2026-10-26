@@ -661,6 +661,34 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .rem-card .acts button.sure{ background:#B0374A; color:#fff; border-color:#B0374A; }
   .rem-sm{ margin:16px 2px 8px; font-weight:700; font-size:14px; color:var(--navy-ink); display:flex; justify-content:space-between; }
   .rem-two{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .rem-hd{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin:2px 2px 12px; }
+  .rem-hd .nm{ font:400 22px var(--f-display); color:var(--ink); }
+  .rem-hd .lk{ font-size:12.5px; font-weight:600; color:var(--ink-2); }
+  .rem-hd .lk a{ color:var(--navy); font-weight:700; text-decoration:none; }
+  .rem-tiles{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+  .rem-tile{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 6px; text-align:center; box-shadow:var(--shadow); }
+  .rem-tile b{ display:block; font-size:22px; font-weight:800; color:var(--ink); line-height:1.1; }
+  .rem-tile span{ display:block; margin-top:3px; font-size:10.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-2); }
+  .rem-tile.red b{ color:#B0374A; } .rem-tile.green b{ color:#146B3A; }
+  .rem-new{ width:100%; height:48px; margin-bottom:14px; border:1px dashed var(--navy); background:transparent; color:var(--navy); border-radius:14px; font:inherit; font-size:14.5px; font-weight:700; cursor:pointer; }
+  .rem-new.open{ background:var(--navy); color:#fff; border-style:solid; }
+  .rem-seg{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:var(--chip); border-radius:14px; padding:4px; margin:0 0 14px; }
+  .rem-seg button{ border:0; background:transparent; color:var(--ink-2); font:inherit; font-size:14px; font-weight:700; height:40px; border-radius:11px; cursor:pointer; }
+  .rem-seg button.on{ background:var(--navy); color:#fff; box-shadow:0 4px 12px rgba(15,27,61,.25); }
+  .rem-grp{ display:flex; align-items:center; gap:8px; margin:18px 2px 8px; font-size:11.5px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-2); }
+  .rem-grp i{ width:8px; height:8px; border-radius:50%; background:var(--navy); display:inline-block; }
+  .rem-grp.red{ color:#B0374A; } .rem-grp.red i{ background:#B0374A; }
+  .rem-grp.amber{ color:#B26A00; } .rem-grp.amber i{ background:#E39A1B; }
+  .rem-grp em{ margin-left:auto; font-style:normal; background:var(--chip); color:var(--ink-2); border-radius:999px; padding:2px 9px; letter-spacing:0; font-size:11.5px; }
+  .rem-card{ position:relative; padding:14px 14px 12px 18px; overflow:hidden; }
+  .rem-card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--navy); }
+  .rem-card.due::before{ background:#B0374A; } .rem-card.hit::before{ background:#2E9E5B; } .rem-card.done::before{ background:var(--line); }
+  .rem-card .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .rem-card .chips span{ font-size:11.5px; font-weight:700; background:var(--chip); color:var(--navy-ink); border-radius:999px; padding:4px 10px; }
+  .rem-card .foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
+  .rem-card .foot .meta{ margin:0; }
+  .rem-card .foot .acts{ margin:0; }
+  .rem-card .acts button.pri{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:700; }
   .home-card .bdg{ display:inline-block; margin-top:5px; font-size:12px; font-weight:700; color:#146B3A; background:#E3F4EA; border-radius:999px; padding:3px 9px; }
   .inq{ max-width:760px; margin:0 auto; padding:14px 14px 40px; }
   .inq[hidden]{ display:none; }
@@ -965,7 +993,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
 </section>
 <section class="inq" id="remView" hidden>
   <div id="rmWho"></div>
-  <form class="inq-form" id="remForm" autocomplete="off" novalidate>
+  <button type="button" class="rem-new" id="rmNew" onclick="__remNew()">+ New reminder &middot; تذكير جديد</button>
+  <form class="inq-form" id="remForm" autocomplete="off" novalidate style="display:none">
     <div class="inq-title" dir="rtl">تذكير جديد</div>
     <div class="inq-sub">New reminder &middot; one per client</div>
     <div class="inq-grid">
@@ -981,7 +1010,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     <button type="submit" class="inq-send" id="rmSend">Save reminder &middot; حفظ التذكير</button>
     <div class="inq-err" id="rmErr" role="alert"></div>
   </form>
-  <div class="inq-list-h" id="rmHead"><h3>Reminders</h3><div style="display:flex;gap:6px"><select id="rmFilter" aria-label="Filter by salesman"></select><select id="rmFilterSt" aria-label="Filter by status"></select></div></div>
+  <div class="inq-list-h" id="rmHead"><h3>Reminders</h3><div style="display:flex;gap:6px"><select id="rmFilter" aria-label="Filter by salesman"></select><select id="rmFilterSt" aria-label="Filter by status" style="display:none"></select></div></div>
+  <div class="rem-seg" id="rmSeg"></div>
   <div id="rmList"></div>
 </section>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -3737,16 +3767,27 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   window.__remWho = function(n){ remMe = n; remTeam = false; remFilter = n; try{ localStorage.setItem('hipco_rem_me', n); }catch(e){} document.getElementById('rmSm').value = n; renderRem(); };
   window.__remChange = function(){ remMe = ''; try{ localStorage.removeItem('hipco_rem_me'); }catch(e){} renderRem(); };
   window.__remTeam = function(v){ remTeam = v; remFilter = v ? '' : remMe; renderRem(); };
+  var remFormOpen = false;
+  window.__remNew = function(){ remFormOpen = !remFormOpen; renderRem(); if(remFormOpen){ try{ document.getElementById('remForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); }catch(e){} } };
+  window.__remSt = function(v){ remFilterSt = v; renderRem(); };
   function renderRem(){
     var who = document.getElementById('rmWho'), pick = !remMe;
-    ['remForm','rmHead','rmList'].forEach(function(k){ document.getElementById(k).style.display = pick ? 'none' : ''; });
+    ['rmHead','rmList','rmSeg','rmNew'].forEach(function(k){ document.getElementById(k).style.display = pick ? 'none' : ''; });
+    document.getElementById('remForm').style.display = (pick || !remFormOpen) ? 'none' : '';
+    document.getElementById('rmHead').style.display = (pick || !remTeam) ? 'none' : '';
+    var nb = document.getElementById('rmNew'); nb.classList.toggle('open', remFormOpen); nb.innerHTML = remFormOpen ? '&times; Close &middot; إغلاق' : '+ New reminder &middot; تذكير جديد';
     if(pick){
       who.innerHTML = '<div class="inq-form" style="text-align:center"><div class="inq-title" style="font-family:var(--f-display)">Who are you?</div><div class="inq-sub">Pick your name once &mdash; you will see only your own reminders</div><div class="inq-types" style="justify-content:center">' +
         REM_SMS.map(function(n){ return '<button type="button" class="home-card" style="padding:12px 18px;border-radius:999px;box-shadow:none;border:1px solid var(--line)" onclick="__remWho(\'' + n + '\')"><span class="tt" style="font-size:16px">' + n + '</span></button>'; }).join('') + '</div></div>';
       return;
     }
     var mine = remDocs.filter(function(r){ return r.salesman === remMe && r.status !== 'done'; }), hits = mine.filter(function(r){ return remMatches(r).length; }).length;
-    who.innerHTML = '<div class="rem-sm" style="margin:2px 2px 10px;align-items:center"><span>👤 ' + escapeHtml(remMe) + '&rsquo;s reminders &middot; ' + mine.length + ' open' + (hits ? ' &middot; <span style="color:#146B3A">🔔 ' + hits + ' match a list</span>' : '') + '</span><span><a href="#" onclick="__remTeam(' + (remTeam ? 'false' : 'true') + ');return false" style="color:var(--navy);font-weight:600">' + (remTeam ? 'My reminders' : 'Team view') + '</a> &middot; <a href="#" onclick="__remChange();return false" style="color:var(--ink-2);font-weight:600">Not you?</a></span></div>';
+    var scope = remTeam ? remDocs : remDocs.filter(function(r){ return r.salesman === remMe; }), tdy = todayKey();
+    var openS = scope.filter(function(r){ return r.status !== 'done'; });
+    var nDue = openS.filter(function(r){ return r.due && r.due <= tdy; }).length, nHit = openS.filter(function(r){ return remMatches(r).length; }).length, nDone = scope.length - openS.length;
+    who.innerHTML = '<div class="rem-hd"><div class="nm">' + (remTeam ? 'Team reminders' : escapeHtml(remMe) + '&rsquo;s reminders') + '</div><div class="lk"><a href="#" onclick="__remTeam(' + (remTeam ? 'false' : 'true') + ');return false">' + (remTeam ? 'My reminders' : 'Team view') + '</a> &middot; <a href="#" onclick="__remChange();return false" style="color:var(--ink-2)">Not you?</a></div></div>' +
+      '<div class="rem-tiles"><div class="rem-tile"><b>' + openS.length + '</b><span>Open</span></div><div class="rem-tile' + (nDue ? ' red' : '') + '"><b>' + nDue + '</b><span>Due</span></div><div class="rem-tile' + (nHit ? ' green' : '') + '"><b>' + nHit + '</b><span>List match</span></div><div class="rem-tile"><b>' + nDone + '</b><span>Done</span></div></div>';
+    document.getElementById('rmSeg').innerHTML = [['open','Open'],['done','Done'],['','All']].map(function(o){ return '<button type="button" class="' + (remFilterSt === o[0] ? 'on' : '') + '" onclick="__remSt(\'' + o[0] + '\')">' + o[1] + '</button>'; }).join('');
     if(!remTeam){ remFilter = remMe; }
     var sm = document.getElementById('rmSm'); if(!sm.value) sm.value = remMe; document.getElementById('rmClient').placeholder = sm.value ? 'Choose from the list or type' : 'Choose salesman first';
     remFillForm();
@@ -3757,24 +3798,31 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var list = remDocs.filter(function(r){ return (!remFilter || r.salesman === remFilter) && (!remFilterSt || (r.status === 'done' ? 'done' : 'open') === remFilterSt); });
     var el = document.getElementById('rmList');
     if(!list.length){ el.innerHTML = '<div class="empty">No reminders here yet.</div>'; return; }
-    var by = {}; list.forEach(function(r){ (by[r.salesman || 'Other'] = by[r.salesman || 'Other'] || []).push(r); });
     var today = todayKey(), html = '';
-    Object.keys(by).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); }).forEach(function(n){
-      var rs = by[n].sort(function(a, b){ return (remMatches(b).length ? 1 : 0) - (remMatches(a).length ? 1 : 0) || (b.createdAt || 0) - (a.createdAt || 0); });
-      html += '<div class="rem-sm"><span>' + escapeHtml(n) + '</span><span>' + rs.length + '</span></div>';
-      rs.forEach(function(r){
-        var id = jsStr(r._id), done = r.status === 'done', ms = done ? [] : remMatches(r);
-        var want = [r.quality, (r.gsmFrom || r.gsmTo) ? ((r.gsmFrom || r.gsmTo) + (r.gsmTo && r.gsmTo !== r.gsmFrom && r.gsmFrom ? '–' + r.gsmTo : '') + ' GSM') : ''].filter(Boolean).join(' · ');
-        var dueNow = !done && r.due && r.due <= today;
-        html += '<div class="rem-card' + (done ? ' done' : '') + '"><div class="top"><div><div class="cl">' + escapeHtml(r.client || '') + '</div>' + (want ? '<div class="want">' + escapeHtml(want) + '</div>' : '') + '</div>' +
-          (done ? '<span class="st">Done</span>' : (dueNow ? '<span class="st due">Due ' + escapeHtml(fmtInqDate(r.due)) + '</span>' : (r.due ? '<span class="st">' + escapeHtml(fmtInqDate(r.due)) + '</span>' : ''))) + '</div>' +
-          (r.note ? '<div class="nt">' + escapeHtml(r.note) + '</div>' : '') +
-          (ms.length ? '<div class="rem-match">🔔 New list matches' + ms.slice(0, 4).map(function(d){ return '<div>' + escapeHtml((d.reference || '').split('-')[0] || d.reference || '') + ' · ' + escapeHtml(d.quality_group || '') + ' · ' + escapeHtml(d.gsm || '') + ' · ' + escapeHtml(d.qty_mt || '') + '</div>'; }).join('') + '</div>' : '') +
-          '<div class="meta">Added ' + escapeHtml(fmtStamp(r.createdAt, r.date)) + '</div>' +
-          '<div class="acts"><button type="button" onclick="__remDone(\'' + id + '\',' + (done ? 'false' : 'true') + ')">' + (done ? 'Reopen' : '✓ Done') + '</button>' +
-          '<button type="button" onclick="__remDel(this,\'' + id + '\')">Delete</button></div></div>';
-      });
-    });
+    function card(r){
+      var id = jsStr(r._id), done = r.status === 'done', ms = done ? [] : remMatches(r), dueNow = !done && r.due && r.due <= today;
+      var chips = [r.quality, (r.gsmFrom || r.gsmTo) ? ((r.gsmFrom || r.gsmTo) + (r.gsmTo && r.gsmTo !== r.gsmFrom && r.gsmFrom ? '\u2013' + r.gsmTo : '') + ' GSM') : ''].filter(Boolean);
+      return '<div class="rem-card' + (done ? ' done' : (dueNow ? ' due' : (ms.length ? ' hit' : ''))) + '"><div class="top"><div class="cl">' + escapeHtml(r.client || '') + '</div>' +
+        (done ? '<span class="st">Done</span>' : (dueNow ? '<span class="st due">Due ' + escapeHtml(fmtInqDate(r.due)) + '</span>' : (r.due ? '<span class="st">' + escapeHtml(fmtInqDate(r.due)) + '</span>' : ''))) + '</div>' +
+        (chips.length ? '<div class="chips">' + chips.map(function(c){ return '<span>' + escapeHtml(c) + '</span>'; }).join('') + '</div>' : '') +
+        (r.note ? '<div class="nt">' + escapeHtml(r.note) + '</div>' : '') +
+        (ms.length ? '<div class="rem-match">\uD83D\uDD14 New list matches' + ms.slice(0, 4).map(function(d){ return '<div>' + escapeHtml((d.reference || '').split('-')[0] || d.reference || '') + ' \u00b7 ' + escapeHtml(d.quality_group || '') + ' \u00b7 ' + escapeHtml(d.gsm || '') + ' \u00b7 ' + escapeHtml(d.qty_mt || '') + '</div>'; }).join('') + '</div>' : '') +
+        '<div class="foot"><div class="meta">' + (remTeam ? escapeHtml(r.salesman || '') + ' \u00b7 ' : '') + 'Added ' + escapeHtml(fmtStamp(r.createdAt, r.date)) + '</div><div class="acts"><button type="button" class="' + (done ? '' : 'pri') + '" onclick="__remDone(\'' + id + '\',' + (done ? 'false' : 'true') + ')">' + (done ? 'Reopen' : '\u2713 Done') + '</button>' +
+        '<button type="button" onclick="__remDel(this,\'' + id + '\')">Delete</button></div></div></div>';
+    }
+    function byDue(a, b){ return (a.due || '9999').localeCompare(b.due || '9999') || (remMatches(b).length ? 1 : 0) - (remMatches(a).length ? 1 : 0) || (b.createdAt || 0) - (a.createdAt || 0); }
+    function grp(t, cls, rs){ return rs.length ? '<div class="rem-grp ' + cls + '"><i></i>' + t + '<em>' + rs.length + '</em></div>' + rs.map(card).join('') : ''; }
+    if(remTeam){
+      var by = {}; list.forEach(function(r){ (by[r.salesman || 'Other'] = by[r.salesman || 'Other'] || []).push(r); });
+      Object.keys(by).sort(function(a, b){ return salesmanRank(a) - salesmanRank(b); }).forEach(function(n){ html += grp(escapeHtml(n), '', by[n].sort(byDue)); });
+    } else {
+      var op = list.filter(function(r){ return r.status !== 'done'; }), dn = list.filter(function(r){ return r.status === 'done'; });
+      html += grp('Overdue', 'red', op.filter(function(r){ return r.due && r.due < today; }).sort(byDue));
+      html += grp('Today', 'amber', op.filter(function(r){ return r.due === today; }).sort(byDue));
+      html += grp('Upcoming', '', op.filter(function(r){ return r.due && r.due > today; }).sort(byDue));
+      html += grp('No date', '', op.filter(function(r){ return !r.due; }).sort(byDue));
+      html += grp('Done', '', dn.sort(function(a, b){ return (b.doneAt || 0) - (a.doneAt || 0); }));
+    }
     el.innerHTML = html;
   }
   window.__remDone = async function(id, v){
@@ -3804,7 +3852,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var id = 'rem' + Date.now().toString(36);
     try{
       await dbRef.doc('reminders/' + id).set({ salesman: g('rmSm'), client: g('rmClient'), quality: g('rmQual'), gsmFrom: g('rmG1'), gsmTo: g('rmG2'), note: g('rmNote').slice(0, 500), due: g('rmDue'), date: todayKey(), createdAt: Date.now(), status: 'open' });
-      showToast('Reminder saved');
+      showToast('Reminder saved'); remFormOpen = false;
       ['rmClient','rmNote','rmG1','rmG2','rmDue'].forEach(function(k){ document.getElementById(k).value = ''; });
       document.getElementById('rmQual').value = '';
       remFilter = g('rmSm') ? remFilter : remFilter;
