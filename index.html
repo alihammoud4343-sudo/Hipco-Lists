@@ -208,6 +208,9 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .lf-x{ flex:none; width:32px; height:32px; border:0; border-radius:50%; background:var(--chip); color:var(--ink); font-size:17px; line-height:1; cursor:pointer; }
   .lf-x[hidden]{ display:none; }
   .lf-b{ padding:6px 16px 16px; display:grid; gap:14px; }
+  .lf-q{ display:flex; flex-wrap:wrap; gap:6px; }
+  .lf-q button{ border:1.5px solid var(--line, rgba(128,128,128,.35)); background:var(--chip); color:var(--ink-2); font:inherit; font-size:14px; font-weight:700; height:38px; padding:0 14px; border-radius:19px; cursor:pointer; transition:background .15s,color .15s; }
+  .lf-q button.on{ background:var(--navy); border-color:var(--navy); color:#fff; }
   .lf-t{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:var(--chip); border-radius:14px; padding:4px; }
   .lf-t button{ border:0; background:transparent; color:var(--ink-2); font:inherit; font-size:15px; font-weight:700; letter-spacing:.2px; height:46px; border-radius:11px; cursor:pointer; transition:background .15s, color .15s, box-shadow .15s; }
   .lf-t button.on{ background:var(--navy); color:#fff; box-shadow:0 4px 12px rgba(15,27,61,.28); }
@@ -874,8 +877,9 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   <div class="lf" id="lf">
     <div class="lf-bar" id="lfBar"><button type="button" class="lf-pill" id="lfH" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg><span>Filter</span><small id="lfSm"></small></button><button type="button" class="lf-x" id="lfX" aria-label="Remove filter" hidden>&times;</button></div>
     <div class="lf-card" id="lfB" hidden>
-      <div class="lf-top"><span>Filter by GSM &amp; size</span><button type="button" class="lf-x" id="lfClose" aria-label="Close filter">&times;</button></div>
+      <div class="lf-top"><span>Filter by quality, GSM &amp; size</span><button type="button" class="lf-x" id="lfClose" aria-label="Close filter">&times;</button></div>
       <div class="lf-b">
+      <div class="lf-f"><div class="lf-l">Quality</div><div class="lf-q" role="group" aria-label="Quality" id="lfQ"></div></div>
       <div class="lf-t" role="group" aria-label="Format" id="lfT"><button type="button" class="on" data-t="all">All</button><button type="button" data-t="R">Reels</button><button type="button" data-t="S">Sheets</button></div>
       <div class="lf-f"><div class="lf-l">GSM</div>
         <div class="lf-row"><div class="lf-i"><input id="lfG1" type="number" inputmode="decimal" placeholder="from" aria-label="GSM from"><button type="button" data-c="lfG1" aria-label="Clear">&times;</button></div><span class="sep">&ndash;</span><div class="lf-i"><input id="lfG2" type="number" inputmode="decimal" placeholder="to" aria-label="GSM to"><button type="button" data-c="lfG2" aria-label="Clear">&times;</button></div></div></div>
@@ -2025,9 +2029,22 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   var PDF_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 14h6M9 17h4"/></svg>';
 
   // ---------- GSM / size / type filter (line items read from every PDF: data/lines_index.json) ----------
-  var lineIdx = {}, LF = { g1: null, g2: null, w: null, l: null, t: 'all' };
+  var lineIdx = {}, LF = { g1: null, g2: null, w: null, l: null, t: 'all', qs: [] };
+  // quality chips: r = regex on a line's quality name, d = regex on the list's own quality fields (used only for lines whose name says nothing)
+  var QCH = [
+    { k:'Duplex', r:/duplex|clc\//i }, { k:'FBB', r:/\bfbb\b|folding box|solid bleached|smooth bleached|\bsbs\b/i },
+    { k:'CKB', r:/\bckb\b|crownboard/i }, { k:'NCR', r:/ncr/i }, { k:'Bulky', r:/bulky/i },
+    { k:'Kraftliner', r:/kraftliner|kraft top liner|top kraft liner|virgin white top liner/i }, { k:'Testliner', r:/testliner|wttl/i },
+    { k:'Fluting', r:/fluting/i }, { k:'Newsprint', r:/newsprint/i }, { k:'Cupstock', r:/cup|poly [12] side/i },
+    { k:'Woodfree', r:/woodfree|chambril|bond/i }, { k:'LWC', r:/lwc/i }
+  ];
+  function rowQual(d, r){
+    var any = QCH.some(function(c){ return c.r.test(r.q); });
+    var hay = [d.quality_group, d.product, d.ar_quality].map(function(x){ return (x || '').toString(); }).join(' ');
+    return LF.qs.some(function(k){ var c = QCH.filter(function(x){ return x.k === k; })[0]; return c && (c.r.test(r.q) || (!any && c.r.test(hay))); });
+  }
   function docRef(d){ var m = /^sl-?(\d+)/i.exec(d.reference || d._id || ''); return m ? 'SL' + m[1] : ''; }
-  function lfActive(){ return LF.g1 != null || LF.g2 != null || LF.w != null || LF.l != null || LF.t !== 'all'; }
+  function lfActive(){ return LF.g1 != null || LF.g2 != null || LF.w != null || LF.l != null || LF.t !== 'all' || LF.qs.length > 0; }
   function docHay(d){ return [d.reference, d.supplier, d.product, d.origin, d.origin_ar, d.mill, d.ar_quality, d.gsm, d.type, d.price, d.quality_group].map(function(x){ return (x || '').toString().toLowerCase(); }).join(' '); }
   // rows of this list that pass the text search and the GSM / width / format filter
   function lineMatches(d, q){
@@ -2041,6 +2058,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       if(LF.w != null && (r.w == null || Math.abs(r.w - LF.w) > 0.05)) return false;
       if(LF.l != null && (r.l == null || Math.abs(r.l - LF.l) > 0.05)) return false;
       if(LF.t !== 'all' && r.t !== LF.t) return false;
+      if(LF.qs.length && !rowQual(d, r)) return false;
       return true;
     });
   }
@@ -2066,6 +2084,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       el('lfW').placeholder = 'width';
       var on = lfActive(); el('lfX').hidden = !on; el('lfH').classList.toggle('act', on);
       var parts = [];
+      if(LF.qs.length) parts.push(LF.qs.join(' + '));
       if(LF.t !== 'all') parts.push(LF.t === 'R' ? 'Reels' : 'Sheets');
       if(LF.g1 != null || LF.g2 != null) parts.push((LF.g1 != null ? LF.g1 : '') + '\u2013' + (LF.g2 != null ? LF.g2 : '') + ' g');
       if(LF.w != null || LF.l != null) parts.push((LF.w != null ? LF.w : '') + (LF.l != null ? ' \u00d7 ' + LF.l : '') + ' cm');
@@ -2074,6 +2093,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     }
     function clearAll(){
       ['lfG1','lfG2','lfW','lfL'].forEach(function(id){ el(id).value = ''; });
+      LF.qs = []; Array.prototype.forEach.call(el('lfQ').children, function(x){ x.classList.remove('on'); });
       LF.t = 'all'; Array.prototype.forEach.call(el('lfT').children, function(x){ x.classList.toggle('on', x.getAttribute('data-t') === 'all'); }); sync();
     }
     ['lfG1','lfG2','lfW','lfL'].forEach(function(id){ el(id).addEventListener('input', sync); });
@@ -2081,6 +2101,12 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     el('lfT').addEventListener('click', function(ev){
       var b = ev.target.closest('button'); if(!b) return; LF.t = b.getAttribute('data-t');
       Array.prototype.forEach.call(this.children, function(x){ x.classList.toggle('on', x === b); }); sync();
+    });
+    el('lfQ').innerHTML = QCH.map(function(c){ return '<button type="button" data-q="' + c.k + '">' + c.k + '</button>'; }).join('');
+    el('lfQ').addEventListener('click', function(ev){
+      var b = ev.target.closest('button'); if(!b) return; var k = b.getAttribute('data-q'), i = LF.qs.indexOf(k);
+      if(i === -1) LF.qs.push(k); else LF.qs.splice(i, 1);
+      b.classList.toggle('on', i === -1); sync();
     });
     el('lfClr').addEventListener('click', clearAll);
     el('lfX').addEventListener('click', clearAll);
