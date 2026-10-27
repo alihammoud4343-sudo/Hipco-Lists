@@ -44,8 +44,8 @@ for p in sorted(glob.glob('SL*.pdf')):
         spec = None; typ = None; nums = []
         for t in rest:
             tl = t.lower()
-            sm = re.fullmatch(r'(' + NUM + r')\s*[xX×]\s*(' + NUM + r')(?:\s*\(?sheets?\)?)?', t)
-            rm = re.fullmatch(r'(' + NUM + r')\s*\(reel\)', t, re.I)
+            sm = re.fullmatch(r'(' + NUM + r')\s*[xX×]\s*(' + NUM + r')(?:\s*\(?sheets?\)?)?(?:\s*cm)?', t, re.I)
+            rm = re.fullmatch(r'(' + NUM + r')\s*(?:\(reel\)|cm)', t, re.I)
             if sm and spec is None: spec = ('S', f(sm.group(1)), f(sm.group(2)))
             elif rm and spec is None: spec = ('R', f(rm.group(1)), None)
             elif tl in ('roll', 'rolls', 'reel', 'reels'): typ = 'R'
