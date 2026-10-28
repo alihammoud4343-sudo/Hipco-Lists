@@ -316,6 +316,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     font-size:13.5px; font-weight:600; letter-spacing:0.2px; cursor:pointer;
   }
   .pdf-btn:active{ transform:scale(0.99); }
+  .orig-btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:8px; padding:12px 14px; border-radius:14px; border:1.5px dashed var(--navy); background:transparent; color:var(--navy); font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+  .orig-btn:active{ transform:scale(0.99); } .orig-btn[disabled]{ opacity:.6; }
   .pdf-btn[disabled]{ opacity:0.65; }
 
   .client-match{ display:flex; flex-direction:column; gap:10px; }
@@ -1201,6 +1203,28 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     });
     return out;
   }
+  // original supplier files: stored encrypted in orig/ (only the team password opens them); index.json lists which lists have one
+  var ORIG_IDX = {};
+  fetch('orig/index.json?_=' + Date.now()).then(function(r){ return r.json(); }).then(function(j){ ORIG_IDX = j || {}; if(typeof render === 'function') render(); }).catch(function(){});
+  function origKey(d){ return String(d.reference || '').replace(/[^A-Za-z0-9_-]/g, '_'); }
+  function origOf(d){ return !!SEC.priv && !!ORIG_IDX[origKey(d)]; }
+  window.__getOrig = async function(docId, btn){
+    var d = allDocs.filter(function(x){ return String(x._id) === docId; })[0]; if(!d || !SEC.priv) return;
+    var lab = btn.querySelector('span'), old = lab.textContent; btn.disabled = true; lab.textContent = 'Opening\u2026';
+    try{
+      var r = await fetch('orig/' + origKey(d) + '.json?_=' + Date.now()); if(!r.ok) throw new Error('missing');
+      var o = await r.json();
+      var raw = await crypto.subtle.decrypt({ name:'RSA-OAEP' }, SEC.priv, b64d(o.k));
+      var key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+      var bytes = await crypto.subtle.decrypt({ name:'AES-GCM', iv:b64d(o.iv) }, key, b64d(o.ct));
+      var type = /\.xlsx$/i.test(o.name) ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : (/\.pdf$/i.test(o.name) ? 'application/pdf' : 'application/octet-stream');
+      var file = new File([bytes], o.name, { type: type });
+      if(navigator.canShare && navigator.canShare({ files:[file] })){ try{ await navigator.share({ files:[file], title:o.name }); lab.textContent = old; btn.disabled = false; return; }catch(e){ if(e && e.name === 'AbortError'){ lab.textContent = old; btn.disabled = false; return; } } }
+      var a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = o.name; document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+    }catch(e){ alert('Original file not available for this list.'); }
+    lab.textContent = old; btn.disabled = false;
+  };
   async function applySecrets(){
     if(!SEC.priv) return;
     for(var i = 0; i < allDocs.length; i++){
@@ -2152,6 +2176,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
         '<div class="val r">' + fmtDate(d.dateAdded) + '</div>' +
       '</div>' +
       '<div class="ar-details" dir="rtl">' + escapeHtml(arCardLine(d)) + '</div>' +
+      (origOf(d) ? '<button type="button" class="orig-btn" onclick="__getOrig(\'' + jsStr(docId) + '\', this)">&#128196; <span>Original supplier list (to send to supplier)</span></button>' : '') +
       (d.pdf_url ? '<button type="button" class="pdf-btn" data-pdf="' + escapeHtml(d.pdf_url) + '" data-ref="' + escapeHtml(d.reference || 'report') + '">' + PDF_ICON + '<span>Open PDF report</span></button>' : '') +
       '<button type="button" class="crm-btn' + (crm ? ' on' : '') + '" onclick="__setOfferStatus(\'' + jsStr(docId) + '\',\'' + (crm ? 'available' : 'crm') + '\')">' + (crm ? '✔ Waiting for CRM approval — tap when sent / done' : '⏳ Mark: waiting CRM approval') + '</button>' +
       clientMatchHtml(d);
