@@ -2062,12 +2062,17 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   // ---------- GSM / size / type filter (line items read from every PDF: data/lines_index.json) ----------
   var lineIdx = {}, LF = { g1: null, g2: null, w: null, l: null, t: 'all', qs: [] };
   // quality chips: r = regex on a line's quality name, d = regex on the list's own quality fields (used only for lines whose name says nothing)
-  var QCH = [
-    { k:'Duplex', r:/duplex|clc\//i }, { k:'FBB', r:/\bfbb\b|folding box|solid bleached|smooth bleached|\bsbs\b/i },
-    { k:'CKB', r:/\bckb\b|crownboard/i }, { k:'NCR', r:/ncr/i }, { k:'Bulky', r:/bulky/i },
-    { k:'Kraftliner', r:/kraftliner|kraft top liner|top kraft liner|virgin white top liner/i }, { k:'Testliner', r:/testliner|wttl/i },
-    { k:'Fluting', r:/fluting/i }, { k:'Newsprint', r:/newsprint/i }, { k:'Cupstock', r:/cup|poly [12] side/i },
-    { k:'Woodfree', r:/woodfree|chambril|bond/i }, { k:'LWC', r:/lwc/i }
+  var QCH = [   // each chip matches only what the line / list itself says (nothing assumed)
+    { k:'FBB', r:/\bfbb\b|folding box/i }, { k:'SBS', r:/\bsbs\b|solid bleached/i },
+    { k:'Virgin Sulphite', r:/sulphite|sulfite/i },
+    { k:'Duplex', r:/duplex|clc\//i }, { k:'CKB', r:/\bckb\b|crownboard/i }, { k:'Greyboard', r:/grey ?board|\bgb\b/i },
+    { k:'NCR', r:/ncr/i }, { k:'Bulky', r:/bulky/i },
+    { k:'Uncoated Woodfree', r:/uncoated woodfree|\buwf\b|chambril|bond/i },
+    { k:'Coated Woodfree', r:/coated woodfree|\bwfc\b|\bc2s\b|2s coated|woodfree coated/i }, { k:'LWC', r:/lwc/i },
+    { k:'Kraftliner', r:/kraftliner|kraft top liner|top kraft liner|virgin white top liner/i },
+    { k:'Testliner', r:/testliner|wttl/i }, { k:'White Top Testliner', r:/white top test|wttl/i }, { k:'Fluting', r:/fluting/i },
+    { k:'Bleached Kraft', r:/bleached kraft|bleached mf/i }, { k:'MG / MF Kraft', r:/\bmg\b|\bmf\b|machine glazed/i },
+    { k:'Newsprint', r:/newsprint/i }, { k:'Book Paper', r:/book paper|krubook/i }, { k:'Cupstock', r:/cup|poly [12] side/i }
   ];
   function rowQual(d, r){
     var any = QCH.some(function(c){ return c.r.test(r.q); });
