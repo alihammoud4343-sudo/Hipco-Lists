@@ -2081,6 +2081,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   }
   function docRef(d){ var m = /^sl-?(\d+)/i.exec(d.reference || d._id || ''); return m ? 'SL' + m[1] : ''; }
   function lfActive(){ return LF.g1 != null || LF.g2 != null || LF.w != null || LF.l != null || LF.t !== 'all' || LF.qs.length > 0; }
+  function priceHtml(t){ return escapeHtml(t).split('\n').map(function(l){ return /^\s*[ABC]\s*:/.test(l) ? '<span style="color:#C62828;font-weight:700">' + l + '</span>' : l; }).join('<br>'); }
   function docHay(d){ return [d.reference, d.supplier, d.product, d.origin, d.origin_ar, d.mill, d.ar_quality, d.gsm, d.type, d.price, d.quality_group].map(function(x){ return (x || '').toString().toLowerCase(); }).join(' '); }
   // rows of this list that pass the text search and the GSM / width / format filter
   function lineMatches(d, q){
@@ -2184,7 +2185,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       (extraChips ? '<div class="chiprow">' + extraChips + '</div>' : '') +
       '<div class="meta-line">' +
         '<div class="lbl">Price</div><div class="lbl r">Added</div>' +
-        (isLocked(d) ? '<div class="val"><button type="button" class="lock-link" onclick="__openUnlock()">&#128274; Locked &middot; tap to unlock</button></div>' : '<div class="val">' + escapeHtml((d.price || 'Price on request').toString()).replace(/\n/g, '<br>') + '</div>') +
+        (isLocked(d) ? '<div class="val"><button type="button" class="lock-link" onclick="__openUnlock()">&#128274; Locked &middot; tap to unlock</button></div>' : '<div class="val">' + priceHtml((d.price || 'Price on request').toString()) + '</div>') +
         '<div class="val r">' + fmtDate(d.dateAdded) + '</div>' +
       '</div>' +
       '<div class="ar-details" dir="rtl">' + escapeHtml(arCardLine(d)) + '</div>' +
