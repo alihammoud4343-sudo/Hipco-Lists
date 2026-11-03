@@ -2081,7 +2081,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   }
   function docRef(d){ var m = /^sl-?(\d+)/i.exec(d.reference || d._id || ''); return m ? 'SL' + m[1] : ''; }
   function lfActive(){ return LF.g1 != null || LF.g2 != null || LF.w != null || LF.l != null || LF.t !== 'all' || LF.qs.length > 0; }
-  function priceHtml(t){ var multi = t.indexOf('\n') >= 0; var h = escapeHtml(t).split('\n').map(function(l){ return /^\s*[ABC]\s*:/.test(l) ? '<span style="color:#C62828;font-weight:600">' + l + '</span>' : l; }).join('<br>'); return multi ? '<span style="display:inline-block;font-size:10.5px;line-height:1.35;font-weight:500">' + h + '</span>' : h; }
+  function priceHtml(t){ var multi = t.indexOf('\n') >= 0; var h = escapeHtml(t).split('\n').map(function(l){ return /^\s*([ABC]\s*:|Add-ons)/.test(l) ? '<span style="color:#C62828;font-weight:600">' + l + '</span>' : l; }).join('<br>'); return multi ? '<span style="display:inline-block;font-size:10.5px;line-height:1.35;font-weight:500">' + h + '</span>' : h; }
   function docHay(d){ return [d.reference, d.supplier, d.product, d.origin, d.origin_ar, d.mill, d.ar_quality, d.gsm, d.type, d.price, d.quality_group].map(function(x){ return (x || '').toString().toLowerCase(); }).join(' '); }
   // rows of this list that pass the text search and the GSM / width / format filter
   function lineMatches(d, q){
