@@ -13,6 +13,7 @@ select{ -webkit-appearance:none !important; appearance:none !important; min-heig
 .iq-arrow svg{ width:26px !important; height:26px !important; stroke-width:3 !important; }
 .inq-types.locked label{ opacity:.4; }
 .inq-types.locked label:has(input:checked){ opacity:1; border-color:#1F4283; background:#E4ECFA; font-weight:700; }
+.warn-big{ margin:8px 0 4px; padding:12px 12px; background:#C62828; color:#fff; border-radius:10px; font-size:17px; font-weight:800; line-height:1.25; text-align:center; letter-spacing:.3px; text-transform:uppercase; }
 .iq-tnote{ margin-top:6px; font-size:12.5px; color:#1F4283; font-weight:600; }
 </style>
 </head><body>
@@ -2211,6 +2212,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
           '<div class="facts">' + factsHtml + '</div>' +
           '<div class="chev" aria-hidden="true">' + CHEV + '</div>' +
         '</div>' +
+        (d.warn ? '<div class="warn-big">&#9940; ' + escapeHtml(d.warn) + '</div>' : '') +
         lineBlock(d) +
         (open ? '<div class="card-details">' + details + '</div>' : '') +
       '</div>'
