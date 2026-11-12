@@ -964,6 +964,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
       <span><div class="tt">Stocklot Lists</div><div class="ar" dir="rtl">عروض ستوكات متوفرة في الخارج</div><div class="ds">Live lists, clients and prices</div></span>
     </button>
+    <button type="button" class="home-card" onclick="__go('cm')">
+      <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      <span><div class="tt">Client Master</div><div class="ar" dir="rtl">قائمة العملاء</div><div class="ds">All clients by country &mdash; search, filter, export to Excel</div></span>
+    </button>
     <button type="button" class="home-card" onclick="__go('inq')">
       <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></span>
       <span><div class="tt">New Inquiry</div><div class="ar" dir="rtl">طلب أسعار</div><div class="ds">Each salesman fills this for every new client inquiry</div></span>
@@ -2905,9 +2909,9 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       return '<button type="button" class="' + (filterStatus === o[0] ? 'on' : '') + '" onclick="__setStatusFilter(\'' + o[0] + '\')">' + o[1] + '</button>';
     }).join('');
     var badge = priceTodo(dashRows().filter(function(r){ return SEC.priv || PROTECTED_SM.indexOf(r.sm) === -1; })).length;
-    var viewSeg = '<div class="seg" role="group" aria-label="View"><button type="button" class="' + (view === 'offers' ? 'on' : '') + '" onclick="__setView(\'offers\')">Stocklot lists</button><button type="button" class="' + (view === 'dash' ? 'on' : '') + '" onclick="__setView(\'dash\')">Dashboard' + (badge ? ' <span class="tab-badge">' + badge + '</span>' : '') + '</button><button type="button" class="' + (view === 'clients' ? 'on' : '') + '" onclick="__setView(\'clients\')">Clients</button></div>';
+    var viewSeg = '<div class="seg" role="group" aria-label="View"><button type="button" class="' + (view === 'offers' ? 'on' : '') + '" onclick="__setView(\'offers\')">Stocklot lists</button><button type="button" class="' + (view === 'dash' ? 'on' : '') + '" onclick="__setView(\'dash\')">Dashboard' + (badge ? ' <span class="tab-badge">' + badge + '</span>' : '') + '</button></div>';
     document.querySelector('.searchwrap').style.display = (view !== 'offers') ? 'none' : ''; document.getElementById('lf').style.display = (view !== 'offers') ? 'none' : '';
-    quickFiltersEl.innerHTML = '<div class="frow">' + viewSeg + '</div>' + (view !== 'offers' ? '' : '<div class="frow"><button type="button" class="pill' + (filterType === 'all' ? ' on' : '') + '" onclick="__setTypeFilter(\'all\')">All</button>' +
+    quickFiltersEl.innerHTML = (view === 'clients' ? '' : '<div class="frow">' + viewSeg + '</div>') + (view !== 'offers' ? '' : '<div class="frow"><button type="button" class="pill' + (filterType === 'all' ? ' on' : '') + '" onclick="__setTypeFilter(\'all\')">All</button>' +
       Object.keys(typesPresent).sort().map(function(t){
         return '<button type="button" class="pill' + (filterType === t ? ' on' : '') + '" onclick="__setTypeFilter(\'' + jsStr(t) + '\')">' + escapeHtml(t) + '</button>';
       }).join('') + '</div>');
@@ -3183,11 +3187,12 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     homeEl.hidden = (m !== 'home'); try{ document.documentElement.style.background = document.body.style.background = (m === 'home') ? '#0B1A3F' : ''; }catch(e){}
     inqEl.hidden = (m !== 'inq');
     remEl.hidden = (m !== 'rem');
-    var stock = (m === 'stock');
-    setHidden('#toolbar', !stock); setHidden('#rangeLine', !stock); setHidden('#list', !stock); setHidden('footer', !stock); setHidden('#statsRow', m === 'inq' || m === 'rem');
+    if(m === 'cm') view = 'clients'; else if(m === 'stock' && view === 'clients') view = 'offers';
+    var stock = (m === 'stock' || m === 'cm');
+    setHidden('#toolbar', !stock); setHidden('#rangeLine', !stock); setHidden('#list', !stock); setHidden('footer', !stock); setHidden('#statsRow', m === 'inq' || m === 'rem' || m === 'cm');
     var h1 = document.querySelector('.hero-title h1'), har = document.querySelector('.hero-title .ar');
-    if(h1) h1.textContent = (m === 'inq') ? 'New Inquiry' : (m === 'rem') ? 'Reminders' : 'Hipco Stocklot Offshore';
-    if(har) har.textContent = (m === 'inq') ? 'طلب أسعار' : (m === 'rem') ? 'تذكيرات' : 'متوفر في الخارج';
+    if(h1) h1.textContent = (m === 'cm') ? 'Client Master' : (m === 'inq') ? 'New Inquiry' : (m === 'rem') ? 'Reminders' : 'Hipco Stocklot Offshore';
+    if(har) har.textContent = (m === 'cm') ? 'قائمة العملاء' : (m === 'inq') ? 'طلب أسعار' : (m === 'rem') ? 'تذكيرات' : 'متوفر في الخارج';
     window.scrollTo(0, 0);
     if(m === 'inq'){ inqFormReset(false); renderInq(); }
     if(m === 'rem'){ remTeam = true; remFilter = ''; remQ = ''; var rq = document.getElementById('rmQ'); if(rq) rq.value = ''; renderRem(); }   // always opens on ALL salesmen
