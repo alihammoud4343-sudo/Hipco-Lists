@@ -3529,6 +3529,51 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
 
 
 
+  // ---------- Phone formatting: +961 71 123 456 style, by country ----------
+  var CC_OF = { 'lebanon':'961','syria':'963','iraq':'964','jordan':'962','turkey':'90','saudi arabia':'966','qatar':'974','kuwait':'965','united arab emirates':'971','morocco':'212','nigeria':'234','algeria':'213','tunisia':'216','egypt':'20','oman':'968','gabon':'241',"cote d'ivoire":'225','zambia':'260' };
+  var CC_LIST = ['971','966','974','965','968','961','962','963','964','212','213','216','225','234','241','260','90','20'];
+  function cmGroup(d, sizes){ var out = [], i = 0; sizes.forEach(function(n){ if(i < d.length){ out.push(d.substr(i, n)); i += n; } }); if(i < d.length) out.push(d.substr(i)); return out.join(' '); }
+  function cmFmtRest(cc, r){
+    var n = r.length;
+    if(cc === '961') return n === 7 ? cmGroup(r, [1,3,3]) : n === 8 ? cmGroup(r, [2,3,3]) : cmGroup(r, [3,3,3]);
+    if(cc === '963') return n === 9 ? (r.charAt(0) === '9' ? cmGroup(r, [3,3,3]) : cmGroup(r, [2,3,4])) : cmGroup(r, [3,3,4]);
+    if(cc === '964') return n === 10 ? cmGroup(r, [3,3,4]) : n === 8 ? cmGroup(r, [1,3,4]) : cmGroup(r, [3,3,4]);
+    if(cc === '962') return n === 9 ? cmGroup(r, [2,3,4]) : n === 8 ? cmGroup(r, [1,3,4]) : cmGroup(r, [3,3,3]);
+    if(cc === '90') return n === 10 ? cmGroup(r, [3,3,2,2]) : cmGroup(r, [3,3,4]);
+    if(cc === '966' || cc === '971') return n === 9 ? cmGroup(r, [2,3,4]) : n === 10 ? cmGroup(r, [3,3,4]) : cmGroup(r, [3,3,3]);
+    if(cc === '974') return n === 8 ? cmGroup(r, [4,4]) : cmGroup(r, [3,3,3]);
+    if(cc === '234') return n === 10 ? cmGroup(r, [3,3,4]) : cmGroup(r, [3,3,4]);
+    return n === 9 ? cmGroup(r, [3,3,3]) : n === 10 ? cmGroup(r, [3,3,4]) : n === 8 ? cmGroup(r, [2,3,3]) : cmGroup(r, [3,3,4]);
+  }
+  function cmPhones(raw, country){
+    var out = [];
+    String(raw || '').split(/\n|\||;|,| \/ |\s{2,}|\s+and\s+/i).forEach(function(part){
+      var p = part.trim(); if(!p) return;
+      var plus = p.charAt(0) === '+';
+      var d = p.replace(/[^\d]/g, ''); if(d.length < 6) return;
+      var cc = '', rest = '';
+      if(plus || d.indexOf('00') === 0){ if(!plus) d = d.slice(2); }
+      var intl = plus || p.replace(/[^\d]/g, '').indexOf('00') === 0;
+      if(!intl){   // "971 50 404 0765" style: country code typed without the plus
+        for(var i = 0; i < CC_LIST.length; i++){ var c = CC_LIST[i]; if(d.indexOf(c) === 0 && d.length - c.length >= 7 && d.length - c.length <= 10 && (CC_OF[(country || '').toLowerCase()] === c || d.length >= 11)){ intl = true; break; } }
+      }
+      if(intl){
+        for(var j = 0; j < CC_LIST.length; j++){ if(d.indexOf(CC_LIST[j]) === 0){ cc = CC_LIST[j]; break; } }
+        if(!cc){ out.push({ txt: '+' + cmGroup(d, [3,3,3]), tel: '+' + d }); return; }
+        rest = d.slice(cc.length);
+        if(rest.charAt(0) === '0' && ['961','963','964','962','966','971','90'].indexOf(cc) !== -1) rest = rest.replace(/^0+/, '');   // trunk 0 after the code
+      } else {
+        var cty = CC_OF[(country || '').toLowerCase()];
+        d = d.replace(/^0+/, '');
+        var lebLike = d.length === 8 && /^(70|71|76|78|79|81)/.test(d) || d.length === 7 && /^3/.test(d);
+        if(cty === '961' || (cty && cty !== '963' && d.length >= 8) || (cty === '963' && d.length === 9)){ cc = cty; rest = d; }
+        else { out.push({ txt: cmGroup(d, d.length === 8 ? [2,3,3] : d.length === 7 ? [1,3,3] : [3,3,3]), tel: d, local: true }); return; }
+      }
+      out.push({ txt: '+' + cc + ' ' + cmFmtRest(cc, rest), tel: '+' + cc + rest });
+    });
+    return out;
+  }
+
   // ---------- Clients view: the Client Master inside the app (sorted, searchable, Excel export) ----------
   var CM = { q:'', sm:'', co:'', g:'', ty:'' };
   function cmAll(){ return CL.master ? CL.master.slice() : CL.open.slice(); }
@@ -3572,7 +3617,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       var k = c.co || 'No country';
       if(k !== cur){ cur = k; html += '<div class="cm-grp"><span>' + escapeHtml(k) + '</span><span>' + groups[k].length + '</span></div>'; }
       var sub = [c.t, c.ci, c.sm].filter(Boolean).join(' · ');
-      var tel = c.ph ? c.ph.split(/[\/;,\n]| - /).map(function(x){ x = x.trim(); var d = x.replace(/[^\d+]/g, ''); return d.length >= 6 ? '<a href="tel:' + escapeHtml(d) + '">' + escapeHtml(x) + '</a>' : escapeHtml(x); }).filter(Boolean).join(' &nbsp;·&nbsp; ') : '';
+      var tel = cmPhones(c.ph, c.co).map(function(x){ return '<a href="tel:' + escapeHtml(x.tel) + '" style="white-space:nowrap">' + escapeHtml(x.txt) + '</a>'; }).join(' &nbsp;·&nbsp; ') || escapeHtml(c.ph || '');
       var det = [['Phone', tel], ['Contact', escapeHtml(c.cp || '')], ['Qualities', escapeHtml(c.q || '')], ['Est. annual', escapeHtml(c.mt || '')], ['Payment', escapeHtml(c.pt || '')], ['Notes', escapeHtml(c.n || '')], ['ID', escapeHtml(c.id || '')]]
         .filter(function(r){ return r[1]; }).map(function(r){ return '<div><b>' + r[0] + ':</b> ' + r[1] + '</div>'; }).join('') || '<div><b>No further details in the Client Master.</b></div>';
       html += '<div class="cm-card"><div class="cm-top" onclick="this.parentNode.classList.toggle(\'open\')"><div><div class="cm-name">' + escapeHtml(c.c) + '</div><div class="cm-sub">' + escapeHtml(sub) + '</div></div>' + (c.g ? '<span class="cm-g ' + c.g + '">' + c.g + '</span>' : '') + '</div><div class="cm-det">' + det + '</div></div>';
@@ -3590,7 +3635,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(typeof XLSX === 'undefined'){ showToast('Excel tool is still loading, try again'); return; }
     var f = cmFiltered();
     var head = ['Country','City','Company','Customer type','Salesman','Grade','Phone','Contact','Paper qualities','Est. annual MT','Payment terms','Notes','Client ID'];
-    var rows = f.map(function(c){ return [c.co || '', c.ci || '', c.c, c.t || '', c.sm, c.g || '', c.ph || '', c.cp || '', c.q || '', c.mt || '', c.pt || '', c.n || '', c.id || '']; });
+    var rows = f.map(function(c){ return [c.co || '', c.ci || '', c.c, c.t || '', c.sm, c.g || '', (cmPhones(c.ph, c.co).map(function(x){ return x.txt; }).join(' | ') || c.ph || ''), c.cp || '', c.q || '', c.mt || '', c.pt || '', c.n || '', c.id || '']; });
     var ws = XLSX.utils.aoa_to_sheet([head].concat(rows));
     ws['!cols'] = [12,16,32,14,11,7,22,22,22,14,16,40,10].map(function(w){ return { wch: w }; });
     ws['!views'] = [{ state: 'frozen', ySplit: 1 }]; ws['!autofilter'] = { ref: 'A1:M' + (rows.length + 1) };
