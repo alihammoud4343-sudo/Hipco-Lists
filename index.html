@@ -451,6 +451,24 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .dash-actions{ display:flex; justify-content:flex-end; }
   .dash-export{ font:inherit; font-size:12px; font-weight:600; background:var(--navy); color:#fff; border:0; border-radius:999px; padding:8px 14px; cursor:pointer; }
   .dash-export[disabled]{ opacity:.6; }
+  .cm-bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:2px 0 10px; }
+  .cm-bar input,.cm-bar select{ font:inherit; font-size:14px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; min-width:0; }
+  .cm-bar input{ flex:1 1 180px; }
+  .cm-bar select{ flex:0 1 auto; }
+  .cm-sum{ font-size:12.5px; color:var(--ink-2); margin:0 2px 8px; }
+  .cm-grp{ font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--navy); margin:16px 2px 6px; display:flex; justify-content:space-between; }
+  .cm-card{ background:var(--surface); border:1px solid var(--card-line); border-radius:14px; box-shadow:var(--shadow); padding:11px 13px; margin:0 0 8px; }
+  .cm-top{ display:flex; gap:10px; align-items:flex-start; justify-content:space-between; cursor:pointer; }
+  .cm-name{ font-weight:650; font-size:15px; color:var(--ink); }
+  .cm-sub{ font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+  .cm-g{ flex:none; min-width:24px; text-align:center; font-weight:700; font-size:12px; border-radius:7px; padding:3px 7px; border:1.5px solid var(--ink-2); color:var(--ink-2); }
+  .cm-g.A{ background:#16875A; border-color:#16875A; color:#fff; } .cm-g.B{ background:var(--chip); color:var(--ink); border-color:var(--ink-2); } .cm-g.C{ background:transparent; border-style:dashed; }
+  .cm-det{ display:none; margin-top:9px; padding-top:9px; border-top:1px solid var(--line); font-size:13px; line-height:1.55; color:var(--ink); }
+  .cm-card.open .cm-det{ display:block; }
+  .cm-det b{ color:var(--ink-2); font-weight:600; }
+  .cm-det a{ color:var(--navy); font-weight:600; }
+  .cm-lock{ background:var(--chip); border-radius:12px; padding:10px 12px; font-size:13px; color:var(--ink-2); margin:0 0 10px; }
+  .cm-lock button{ font:inherit; font-weight:600; background:var(--navy); color:#fff; border:0; border-radius:999px; padding:7px 14px; margin-top:6px; cursor:pointer; }
   .dash-note-h{ width:100%; display:flex; justify-content:space-between; align-items:center; gap:10px; background:none; border:0; padding:0 0 0; font:inherit; font-size:11px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase; color:var(--navy); cursor:pointer; text-align:left; }
   .dash-note-h + p{ margin-top:10px; }
   .dash-chips{ display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:2px; width:100%; }
@@ -2887,9 +2905,9 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       return '<button type="button" class="' + (filterStatus === o[0] ? 'on' : '') + '" onclick="__setStatusFilter(\'' + o[0] + '\')">' + o[1] + '</button>';
     }).join('');
     var badge = priceTodo(dashRows().filter(function(r){ return SEC.priv || PROTECTED_SM.indexOf(r.sm) === -1; })).length;
-    var viewSeg = '<div class="seg" role="group" aria-label="View"><button type="button" class="' + (view === 'offers' ? 'on' : '') + '" onclick="__setView(\'offers\')">Stocklot lists</button><button type="button" class="' + (view === 'dash' ? 'on' : '') + '" onclick="__setView(\'dash\')">Dashboard' + (badge ? ' <span class="tab-badge">' + badge + '</span>' : '') + '</button></div>';
-    document.querySelector('.searchwrap').style.display = (view === 'dash') ? 'none' : ''; document.getElementById('lf').style.display = (view === 'dash') ? 'none' : '';
-    quickFiltersEl.innerHTML = '<div class="frow">' + viewSeg + '</div>' + (view === 'dash' ? '' : '<div class="frow"><button type="button" class="pill' + (filterType === 'all' ? ' on' : '') + '" onclick="__setTypeFilter(\'all\')">All</button>' +
+    var viewSeg = '<div class="seg" role="group" aria-label="View"><button type="button" class="' + (view === 'offers' ? 'on' : '') + '" onclick="__setView(\'offers\')">Stocklot lists</button><button type="button" class="' + (view === 'dash' ? 'on' : '') + '" onclick="__setView(\'dash\')">Dashboard' + (badge ? ' <span class="tab-badge">' + badge + '</span>' : '') + '</button><button type="button" class="' + (view === 'clients' ? 'on' : '') + '" onclick="__setView(\'clients\')">Clients</button></div>';
+    document.querySelector('.searchwrap').style.display = (view !== 'offers') ? 'none' : ''; document.getElementById('lf').style.display = (view !== 'offers') ? 'none' : '';
+    quickFiltersEl.innerHTML = '<div class="frow">' + viewSeg + '</div>' + (view !== 'offers' ? '' : '<div class="frow"><button type="button" class="pill' + (filterType === 'all' ? ' on' : '') + '" onclick="__setTypeFilter(\'all\')">All</button>' +
       Object.keys(typesPresent).sort().map(function(t){
         return '<button type="button" class="pill' + (filterType === t ? ' on' : '') + '" onclick="__setTypeFilter(\'' + jsStr(t) + '\')">' + escapeHtml(t) + '</button>';
       }).join('') + '</div>');
@@ -2930,9 +2948,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
 
     refreshUpdated();
     var rangeEl = document.getElementById('rangeLine'), rt = rangeText();
-    if(rangeEl){ rangeEl.innerHTML = rt; rangeEl.hidden = !rt || view === 'dash'; }
+    if(rangeEl){ rangeEl.innerHTML = rt; rangeEl.hidden = !rt || view !== 'offers'; }
 
     if(view === 'dash'){ listEl.innerHTML = dashHtml(); return; }
+    if(view === 'clients'){ listEl.innerHTML = clientsShell(); clientsPaint(); return; }
 
     if(filtered.length === 0){
       listEl.innerHTML = '<div class="empty">No stocklot lists match' + (q ? ' &ldquo;' + escapeHtml(searchEl.value) + '&rdquo;' : ' these filters') + '.</div>';
@@ -3504,14 +3523,89 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   });
 
 
+
+  // ---------- Clients view: the Client Master inside the app (sorted, searchable, Excel export) ----------
+  var CM = { q:'', sm:'', co:'', g:'', ty:'' };
+  function cmAll(){
+    var out = CL.open.slice();
+    if(SEC.priv && CL.locked){ out = out.map(function(c){ var x = (CL.extra || {})[c.c]; return x ? Object.assign({}, c, x) : c; }).concat(CL.locked); }
+    return out;
+  }
+  function cmSorted(list){
+    var rank = function(c){ c = (c || '').toLowerCase(); return c === 'lebanon' ? 0 : c === 'syria' ? 1 : 2; };
+    return list.slice().sort(function(a, b){
+      var ra = rank(a.co), rb = rank(b.co); if(ra !== rb) return ra - rb;
+      var ca = (a.co || 'zzz').toLowerCase(), cb = (b.co || 'zzz').toLowerCase(); if(ca !== cb) return ca < cb ? -1 : 1;
+      return (a.c || '').localeCompare(b.c || '');
+    });
+  }
+  function cmFiltered(){
+    var q = CM.q.trim().toLowerCase();
+    return cmSorted(cmAll().filter(function(c){
+      if(CM.sm && c.sm !== CM.sm) return false;
+      if(CM.co && (c.co || '—') !== CM.co) return false;
+      if(CM.g && c.g !== CM.g) return false;
+      if(CM.ty && c.t !== CM.ty) return false;
+      if(!q) return true;
+      return [c.c, c.co, c.ci, c.ph, c.cp, c.q, c.n, c.sm, c.t, c.id].join(' ').toLowerCase().indexOf(q) !== -1;
+    }));
+  }
+  function cmOpts(key, cur, label, fixed){
+    var set = {}; cmAll().forEach(function(c){ var v = c[key] || (key === 'co' ? '—' : ''); if(v) set[v] = true; });
+    var vals = fixed || Object.keys(set).sort();
+    return '<select data-cm="' + key + '"><option value="">' + label + '</option>' + vals.map(function(v){ return '<option' + (cur === v ? ' selected' : '') + '>' + escapeHtml(v) + '</option>'; }).join('') + '</select>';
+  }
+  function clientsShell(){
+    var locked = !SEC.priv;
+    return '<div class="cm-bar"><input id="cmQ" type="search" placeholder="Search client, phone, quality, note…" value="' + escapeHtml(CM.q) + '">' +
+      cmOpts('sm', CM.sm, 'All salesmen') + cmOpts('co', CM.co, 'All countries') + cmOpts('g', CM.g, 'Grade', ['A','B','C']) + cmOpts('t', CM.ty, 'All types') + '</div>' +
+      '<div class="dash-actions" style="margin:0 0 10px"><button type="button" class="dash-export" onclick="__cmExport(this)">&#8681; Export to Excel</button></div>' +
+      (locked ? '<div class="cm-lock">Showing Wissam&rsquo;s and Ouseili&rsquo;s clients. Unlock with the team password to see everyone.<br><button type="button" onclick="__cmUnlock()">&#128274; Unlock</button></div>' : '') +
+      '<div id="cmOut"></div>';
+  }
+  function clientsPaint(){
+    var out = document.getElementById('cmOut'); if(!out) return;
+    var f = cmFiltered(), html = '', cur = null, n = 0;
+    var groups = {}; f.forEach(function(c){ var k = c.co || 'No country'; (groups[k] = groups[k] || []).push(c); });
+    f.forEach(function(c){
+      var k = c.co || 'No country';
+      if(k !== cur){ cur = k; html += '<div class="cm-grp"><span>' + escapeHtml(k) + '</span><span>' + groups[k].length + '</span></div>'; }
+      var sub = [c.t, c.ci, c.sm].filter(Boolean).join(' · ');
+      var tel = c.ph ? c.ph.split(/[\/;,\n]| - /).map(function(x){ x = x.trim(); var d = x.replace(/[^\d+]/g, ''); return d.length >= 6 ? '<a href="tel:' + escapeHtml(d) + '">' + escapeHtml(x) + '</a>' : escapeHtml(x); }).filter(Boolean).join(' &nbsp;·&nbsp; ') : '';
+      var det = [['Phone', tel], ['Contact', escapeHtml(c.cp || '')], ['Qualities', escapeHtml(c.q || '')], ['Est. annual', escapeHtml(c.mt || '')], ['Payment', escapeHtml(c.pt || '')], ['Notes', escapeHtml(c.n || '')], ['ID', escapeHtml(c.id || '')]]
+        .filter(function(r){ return r[1]; }).map(function(r){ return '<div><b>' + r[0] + ':</b> ' + r[1] + '</div>'; }).join('') || '<div><b>No further details in the Client Master.</b></div>';
+      html += '<div class="cm-card"><div class="cm-top" onclick="this.parentNode.classList.toggle(\'open\')"><div><div class="cm-name">' + escapeHtml(c.c) + '</div><div class="cm-sub">' + escapeHtml(sub) + '</div></div>' + (c.g ? '<span class="cm-g ' + c.g + '">' + c.g + '</span>' : '') + '</div><div class="cm-det">' + det + '</div></div>';
+      n++;
+    });
+    out.innerHTML = '<div class="cm-sum">' + n + ' client' + (n === 1 ? '' : 's') + (SEC.priv ? '' : ' (unlock to see all)') + '</div>' + (html || '<div class="cm-sum">No client matches.</div>');
+  }
+  document.addEventListener('input', function(e){ if(e.target && e.target.id === 'cmQ'){ CM.q = e.target.value; clientsPaint(); } });
+  document.addEventListener('change', function(e){
+    var k = e.target && e.target.getAttribute && e.target.getAttribute('data-cm'); if(!k) return;
+    CM[k === 't' ? 'ty' : k] = e.target.value; clientsPaint();
+  });
+  window.__cmUnlock = function(){ window.__openUnlock('Enter the team password to see all clients.', function(){ loadLockedClients().then(function(){ if(view === 'clients') render(); }); }); };
+  window.__cmExport = function(btn){
+    if(typeof XLSX === 'undefined'){ showToast('Excel tool is still loading, try again'); return; }
+    var f = cmFiltered();
+    var head = ['Country','City','Company','Customer type','Salesman','Grade','Phone','Contact','Paper qualities','Est. annual MT','Payment terms','Notes','Client ID'];
+    var rows = f.map(function(c){ return [c.co || '', c.ci || '', c.c, c.t || '', c.sm, c.g || '', c.ph || '', c.cp || '', c.q || '', c.mt || '', c.pt || '', c.n || '', c.id || '']; });
+    var ws = XLSX.utils.aoa_to_sheet([head].concat(rows));
+    ws['!cols'] = [12,16,32,14,11,7,22,22,22,14,16,40,10].map(function(w){ return { wch: w }; });
+    ws['!views'] = [{ state: 'frozen', ySplit: 1 }]; ws['!autofilter'] = { ref: 'A1:M' + (rows.length + 1) };
+    var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Clients');
+    XLSX.writeFile(wb, 'HIPCO-Clients_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+  };
+
   // ---------- Client picker for the inquiry form (db collection "clients": "open" plain, "locked" encrypted) ----------
   var CL = { open: [], lockedSec: null, locked: null, lockedKey: '' };
   async function loadLockedClients(){
     if(!SEC.priv || !CL.lockedSec) return;
     var key = CL.lockedSec.ct;
     if(CL.lockedKey === key && CL.locked) return;
-    try{ var pl = await secDecryptDoc(CL.lockedSec); CL.locked = pl.clients || []; CL.lockedKey = key; }catch(e){ CL.locked = null; }
+    try{ var pl = await secDecryptDoc(CL.lockedSec); CL.locked = pl.clients || []; CL.extra = pl.extra || {}; CL.lockedKey = key; }catch(e){ CL.locked = null; }
     refreshSug(); try{ refreshSugR(); }catch(e){}
+    try{ if(view === 'clients') render(); }catch(e){}
   }
   function clientsFor(sm){
     var out = CL.open.filter(function(c){ return c.sm === sm; });
