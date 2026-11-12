@@ -3531,11 +3531,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
 
   // ---------- Clients view: the Client Master inside the app (sorted, searchable, Excel export) ----------
   var CM = { q:'', sm:'', co:'', g:'', ty:'' };
-  function cmAll(){
-    var out = CL.open.slice();
-    if(SEC.priv && CL.locked){ out = out.map(function(c){ var x = (CL.extra || {})[c.c]; return x ? Object.assign({}, c, x) : c; }).concat(CL.locked); }
-    return out;
-  }
+  function cmAll(){ return CL.master ? CL.master.slice() : CL.open.slice(); }
   function cmSorted(list){
     var rank = function(c){ c = (c || '').toLowerCase(); return c === 'lebanon' ? 0 : c === 'syria' ? 1 : 2; };
     return list.slice().sort(function(a, b){
@@ -3561,7 +3557,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     return '<select data-cm="' + key + '"><option value="">' + label + '</option>' + vals.map(function(v){ return '<option' + (cur === v ? ' selected' : '') + '>' + escapeHtml(v) + '</option>'; }).join('') + '</select>';
   }
   function clientsShell(){
-    var locked = !SEC.priv;
+    var locked = false;
     return '<div class="cm-bar"><input id="cmQ" type="search" placeholder="Search client, phone, quality, note…" value="' + escapeHtml(CM.q) + '">' +
       cmOpts('sm', CM.sm, 'All salesmen') + cmOpts('co', CM.co, 'All countries') + cmOpts('g', CM.g, 'Grade', ['A','B','C']) + cmOpts('t', CM.ty, 'All types') + '</div>' +
       '<div class="dash-actions" style="margin:0 0 10px"><button type="button" class="dash-export" onclick="__cmExport(this)">&#8681; Export to Excel</button></div>' +
@@ -3582,7 +3578,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       html += '<div class="cm-card"><div class="cm-top" onclick="this.parentNode.classList.toggle(\'open\')"><div><div class="cm-name">' + escapeHtml(c.c) + '</div><div class="cm-sub">' + escapeHtml(sub) + '</div></div>' + (c.g ? '<span class="cm-g ' + c.g + '">' + c.g + '</span>' : '') + '</div><div class="cm-det">' + det + '</div></div>';
       n++;
     });
-    out.innerHTML = '<div class="cm-sum">' + n + ' client' + (n === 1 ? '' : 's') + (SEC.priv ? '' : ' (unlock to see all)') + '</div>' + (html || '<div class="cm-sum">No client matches.</div>');
+    out.innerHTML = '<div class="cm-sum">' + n + ' client' + (n === 1 ? '' : 's') + '' + '</div>' + (html || '<div class="cm-sum">No client matches.</div>');
   }
   document.addEventListener('input', function(e){ if(e.target && e.target.id === 'cmQ'){ CM.q = e.target.value; clientsPaint(); } });
   document.addEventListener('change', function(e){
@@ -3603,7 +3599,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   };
 
   // ---------- Client picker for the inquiry form (db collection "clients": "open" plain, "locked" encrypted) ----------
-  var CL = { open: [], lockedSec: null, locked: null, lockedKey: '' };
+  var CL = { open: [], lockedSec: null, locked: null, lockedKey: '', master: null };
   async function loadLockedClients(){
     if(!SEC.priv || !CL.lockedSec) return;
     var key = CL.lockedSec.ct;
@@ -3846,6 +3842,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
           var x = doc.data() || {};
           if(doc.id === 'open') CL.open = (x.list || []).slice();
           if(doc.id === 'locked') CL.lockedSec = x.sec || null;
+          if(doc.id === 'master') CL.master = (x.list || []).slice();
         });
         loadLockedClients();
       }, function(){ /* client list unavailable in this view */ });

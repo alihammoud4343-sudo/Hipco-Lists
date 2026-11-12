@@ -14,7 +14,7 @@ const seed = { sent: {}, followup: {}, inquiries: {}, reminders: {}, stocklots: 
 for (const c of ['sent', 'followup', 'inquiries', 'reminders']) for (const f of dir(dump + '/' + c)) if (!isHidden(f)) seed[c][f.slice(0, -5)] = rd(dump + '/' + c + '/' + f);
 fs.mkdirSync(repo + '/data', { recursive: true });
 // lists + open clients are plain; prices, suppliers and protected salesmen's clients stay inside each doc's "sec" (team password)
-const payload = { updated: info.lastUpdated || '', docs, clients: { open: rd(dump + '/clients/open.json'), locked: rd(dump + '/clients/locked.json') }, seed };
+const payload = { updated: info.lastUpdated || '', docs, clients: { open: rd(dump + '/clients/open.json'), locked: rd(dump + '/clients/locked.json'), master: rd(dump + '/clients/master.json') }, seed };
 fs.writeFileSync(repo + '/data/vault.json', JSON.stringify(payload));
 fs.writeFileSync(repo + '/data/crypto.json', JSON.stringify(meta));
 console.log('docs', docs.length, 'sent', Object.keys(seed.sent).length, 'vault bytes', fs.statSync(repo + '/data/vault.json').size);
