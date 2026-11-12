@@ -451,10 +451,11 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .dash-actions{ display:flex; justify-content:flex-end; }
   .dash-export{ font:inherit; font-size:12px; font-weight:600; background:var(--navy); color:#fff; border:0; border-radius:999px; padding:8px 14px; cursor:pointer; }
   .dash-export[disabled]{ opacity:.6; }
-  .cm-bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:2px 0 10px; }
-  .cm-bar input,.cm-bar select{ font:inherit; font-size:14px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; min-width:0; }
-  .cm-bar input{ flex:1 1 180px; }
-  .cm-bar select{ flex:0 1 auto; }
+  .cm-bar{ display:flex; flex-wrap:nowrap; gap:6px; align-items:center; justify-content:center; margin:2px 0 10px; }
+  .cm-bar input,.cm-bar select{ font:inherit; font-size:11.5px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:11px; padding:10px 3px; min-width:0; height:40px; box-sizing:border-box; text-align:center; text-align-last:center; }
+  .cm-bar input{ flex:1.15 1 0; }
+  .cm-bar select{ flex:1 1 0; -webkit-appearance:none; appearance:none; background-image:none !important; padding-right:3px !important; text-overflow:clip; }
+  .cm-center{ display:flex; justify-content:center; margin:0 0 10px; }
   .cm-sum{ font-size:12.5px; color:var(--ink-2); margin:0 2px 8px; }
   .cm-grp{ font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--navy); margin:16px 2px 6px; display:flex; justify-content:space-between; }
   .cm-card{ background:var(--surface); border:1px solid var(--card-line); border-radius:14px; box-shadow:var(--shadow); padding:11px 13px; margin:0 0 8px; }
@@ -462,13 +463,15 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .cm-name{ font-weight:650; font-size:15px; color:var(--ink); }
   .cm-sub{ font-size:12.5px; color:var(--ink-2); margin-top:2px; }
   .cm-g{ flex:none; min-width:24px; text-align:center; font-weight:700; font-size:12px; border-radius:7px; padding:3px 7px; border:1.5px solid var(--ink-2); color:var(--ink-2); }
-  .cm-g.A{ background:#16875A; border-color:#16875A; color:#fff; } .cm-g.B{ background:var(--chip); color:var(--ink); border-color:var(--ink-2); } .cm-g.C{ background:transparent; border-style:dashed; }
+  .cm-g{ border:0; color:#fff; min-width:26px; padding:4px 8px; border-radius:8px; box-shadow:0 1px 3px rgba(15,27,61,.18); }
+  .cm-g.A{ background:#16875A; } .cm-g.B{ background:#2F6FDE; } .cm-g.C{ background:#E8871E; }
   .cm-det{ display:none; margin-top:9px; padding-top:9px; border-top:1px solid var(--line); font-size:13px; line-height:1.55; color:var(--ink); }
   .cm-card.open .cm-det{ display:block; }
   .cm-det b{ color:var(--ink-2); font-weight:600; }
   .cm-det a{ color:var(--navy); font-weight:600; }
   .cm-ph{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:2px 0; }
-  .cm-wa{ background:#25D366; color:#fff !important; font-size:12px; font-weight:700; border-radius:999px; padding:4px 12px; text-decoration:none; }
+  .cm-wa{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; background:#25D366; box-shadow:0 1px 3px rgba(15,27,61,.2); text-decoration:none; }
+  .cm-wa svg{ width:18px; height:18px; fill:#fff; }
   .cm-lock{ background:var(--chip); border-radius:12px; padding:10px 12px; font-size:13px; color:var(--ink-2); margin:0 0 10px; }
   .cm-lock button{ font:inherit; font-weight:600; background:var(--navy); color:#fff; border:0; border-radius:999px; padding:7px 14px; margin-top:6px; cursor:pointer; }
   .dash-note-h{ width:100%; display:flex; justify-content:space-between; align-items:center; gap:10px; background:none; border:0; padding:0 0 0; font:inherit; font-size:11px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase; color:var(--navy); cursor:pointer; text-align:left; }
@@ -3605,9 +3608,9 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   }
   function clientsShell(){
     var locked = false;
-    return '<div class="cm-bar"><input id="cmQ" type="search" placeholder="Search client, phone, quality, note…" value="' + escapeHtml(CM.q) + '">' +
-      cmOpts('sm', CM.sm, 'All salesmen') + cmOpts('co', CM.co, 'All countries') + cmOpts('g', CM.g, 'Grade', ['A','B','C']) + cmOpts('t', CM.ty, 'All types') + '</div>' +
-      '<div class="dash-actions" style="margin:0 0 10px"><button type="button" class="dash-export" onclick="__cmExport(this)">&#8681; Export to Excel</button></div>' +
+    return '<div class="cm-bar"><input id="cmQ" type="search" placeholder="Search…" value="' + escapeHtml(CM.q) + '">' +
+      cmOpts('sm', CM.sm, 'Sales') + cmOpts('co', CM.co, 'Country') + cmOpts('g', CM.g, 'Grade', ['A','B','C']) + cmOpts('t', CM.ty, 'Type') + '</div>' +
+      '<div class="cm-center"><button type="button" class="dash-export" onclick="__cmExport(this)">&#8681; Export to Excel</button></div>' +
       (locked ? '<div class="cm-lock">Showing Wissam&rsquo;s and Ouseili&rsquo;s clients. Unlock with the team password to see everyone.<br><button type="button" onclick="__cmUnlock()">&#128274; Unlock</button></div>' : '') +
       '<div id="cmOut"></div>';
   }
@@ -3619,7 +3622,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       var k = c.co || 'No country';
       if(k !== cur){ cur = k; html += '<div class="cm-grp"><span>' + escapeHtml(k) + '</span><span>' + groups[k].length + '</span></div>'; }
       var sub = [c.t, c.ci, c.sm].filter(Boolean).join(' · ');
-      var tel = cmPhones(c.ph, c.co).map(function(x){ var wa = x.local ? '' : ' <a class="cm-wa" href="https://wa.me/' + escapeHtml(x.tel.replace(/\D/g, '')) + '" target="_blank" rel="noopener noreferrer">WhatsApp</a>'; return '<div class="cm-ph"><a href="tel:' + escapeHtml(x.tel) + '" style="white-space:nowrap">' + escapeHtml(x.txt) + '</a>' + wa + '</div>'; }).join('') || escapeHtml(c.ph || '');
+      var tel = cmPhones(c.ph, c.co).map(function(x){ var wa = x.local ? '' : ' <a class="cm-wa" href="https://wa.me/' + escapeHtml(x.tel.replace(/\D/g, '')) + '" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.75-.71 2-1.4.25-.69.25-1.28.17-1.4-.07-.12-.27-.2-.57-.35zM12.05 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26C2.16 6.45 6.6 2 12.06 2c2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.44 9.9-9.89 9.9zM20.5 3.5A11.8 11.8 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.44-8.41z"/></svg></a>'; return '<div class="cm-ph"><a href="tel:' + escapeHtml(x.tel) + '" style="white-space:nowrap">' + escapeHtml(x.txt) + '</a>' + wa + '</div>'; }).join('') || escapeHtml(c.ph || '');
       var det = [['Phone', tel], ['Contact', escapeHtml(c.cp || '')], ['Qualities', escapeHtml(c.q || '')], ['Est. annual', escapeHtml(c.mt || '')], ['Payment', escapeHtml(c.pt || '')], ['Notes', escapeHtml(c.n || '')], ['ID', escapeHtml(c.id || '')]]
         .filter(function(r){ return r[1]; }).map(function(r){ return '<div><b>' + r[0] + ':</b> ' + r[1] + '</div>'; }).join('') || '<div><b>No further details in the Client Master.</b></div>';
       html += '<div class="cm-card"><div class="cm-top" onclick="this.parentNode.classList.toggle(\'open\')"><div><div class="cm-name">' + escapeHtml(c.c) + '</div><div class="cm-sub">' + escapeHtml(sub) + '</div></div>' + (c.g ? '<span class="cm-g ' + c.g + '">' + c.g + '</span>' : '') + '</div><div class="cm-det">' + det + '</div></div>';
