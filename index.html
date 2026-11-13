@@ -3699,7 +3699,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     });
     if(CM.ql && top.indexOf(CM.ql) === -1){ top.push(CM.ql); cnt[CM.ql] = 0; }
     var total = cmFiltered(true).length;
-    el.innerHTML = '<button type="button" class="cm-chip' + (!CM.ql ? ' on' : '') + '" data-cmql="">All qualities <i>' + total + '</i></button>' +
+    el.innerHTML = '<button type="button" class="cm-chip' + (!CM.ql ? ' on' : '') + '" data-cmql="">All clients <i>' + total + '</i></button>' +
       top.map(function(t){ return '<button type="button" class="cm-chip' + (CM.ql === t ? ' on' : '') + '" data-cmql="' + escapeHtml(t) + '">' + escapeHtml(t) + ' <i>' + cnt[t] + '</i></button>'; }).join('') +
       '';
   }
