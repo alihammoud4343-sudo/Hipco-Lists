@@ -3644,8 +3644,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     return list.slice().sort(function(a, b){
       var ca = (a.co || '').toLowerCase(), cb = (b.co || '').toLowerCase();
       if(ca !== cb){
-        if(CM.sm){ if(cnt[ca] !== cnt[cb]) return cnt[cb] - cnt[ca]; }          // one salesman: his biggest country first
-        else { var ra = rank(a.co), rb = rank(b.co); if(ra !== rb) return ra - rb; }   // everyone: Lebanon, Syria, then A-Z
+        if(cnt[ca] !== cnt[cb]) return cnt[cb] - cnt[ca];          // biggest country first, smallest last (everyone or one salesman)
         ca = ca || 'zzz'; cb = cb || 'zzz'; return ca < cb ? -1 : 1;
       }
       if(CM.ord === 'tons'){ var d = cmTons(b) - cmTons(a); if(d) return d; }
