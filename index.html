@@ -480,6 +480,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .cm-chip{ font:inherit; font-size:12px; font-weight:650; color:var(--navy); background:var(--surface); border:1.5px solid #C9D0E3; border-radius:999px; padding:6px 11px; cursor:pointer; }
   .cm-chip i{ font-style:normal; opacity:.55; font-weight:600; }
   .cm-chip.on{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  .cm-chip-c{ color:#2F4FA8; background:#EEF2FD; border-color:#C5D1F3; } .cm-chip-c.on{ background:#2F4FA8; color:#fff; border-color:#2F4FA8; }
+  .cm-ctry{ margin-bottom:8px; }
   .cm-chip-warn{ color:#B45309; border-color:#F0C27A; } .cm-chip-warn.on{ background:#E8871E; border-color:#E8871E; color:#fff; }
   .cm-acts{ gap:8px; flex-wrap:wrap; }
   .cm-ord{ -webkit-appearance:none; appearance:none; background-image:none !important; width:auto; flex:none; height:38px; font:inherit; font-size:12.5px; color:var(--ink); background-color:var(--surface); border:1.5px solid #C9D0E3; border-radius:999px; padding:0 14px !important; text-align:center; text-align-last:center; }
@@ -3654,11 +3656,11 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       return (a.c || '').localeCompare(b.c || '');
     });
   }
-  function cmFiltered(skipQl){
+  function cmFiltered(skipQl, skipCo){
     var q = CM.q.trim().toLowerCase(), now = Date.now();
     return cmSorted(cmAll().filter(function(c){
       if(CM.sm && c.sm !== CM.sm) return false;
-      if(CM.co && (c.co || '—') !== CM.co) return false;
+      if(!skipCo && CM.co && (c.co || '—') !== CM.co) return false;
       if(CM.g && c.g !== CM.g) return false;
       if(CM.ty && c.t !== CM.ty) return false;
       if(!skipQl && CM.ql && cmToks(c).indexOf(CM.ql) === -1) return false;
@@ -3685,11 +3687,19 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     }
     return tabs + '<div class="cm-bar"><input id="cmQ" type="search" name="cm-search-' + Date.now() + '" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Search" value="' + escapeHtml(CM.q) + '">' +
       cmOpts('sm', CM.sm, 'All salesmen') + cmOpts('co', CM.co, 'All countries') + cmOpts('g', CM.g, 'All grades', ['A','B','C']) + cmOpts('t', CM.ty, 'All types') + '</div>' +
-      '<div id="cmChips" class="cm-chips"></div>' +
+      '<div id="cmCtry" class="cm-chips cm-ctry"></div><div id="cmChips" class="cm-chips"></div>' +
       '<div class="cm-center cm-acts"><button type="button" class="dash-export" data-cmact="xls">&#8681; Excel</button><button type="button" class="dash-export" data-cmact="add">+ Add client</button></div>' +
       '<div id="cmOut"></div>';
   }
+  function cmCountries(){
+    var el = document.getElementById('cmCtry'); if(!el) return;
+    var cnt = {}, list = cmFiltered(false, true); list.forEach(function(c){ var k = c.co || '—'; cnt[k] = (cnt[k] || 0) + 1; });
+    var order = cmSorted(list).map(function(c){ return c.co || '—'; }).filter(function(k, i, a){ return a.indexOf(k) === i; });
+    if(CM.co && order.indexOf(CM.co) === -1){ order.push(CM.co); cnt[CM.co] = 0; }
+    el.innerHTML = order.map(function(k){ return '<button type="button" class="cm-chip cm-chip-c' + (CM.co === k ? ' on' : '') + '" data-cmco="' + escapeHtml(k) + '">' + escapeHtml(k) + ' <i>' + cnt[k] + '</i></button>'; }).join('');
+  }
   function cmChips(){
+    cmCountries();
     var el = document.getElementById('cmChips'); if(!el) return;
     var cnt = {}; cmFiltered(true).forEach(function(c){ cmToks(c).forEach(function(t){ cnt[t] = (cnt[t] || 0) + 1; }); });   // counts follow the salesman / country / grade / type / search you picked
     var ORD = ['FBB','UWF','CWF','SBS','CKB','WLC','DB','GB','KL','TL','WTTL','FL','NP','UCO','BK','A4','PE','SK','NCR','LB','TS','STK','SEC','LP'];   // the app's usual quality order
@@ -3881,6 +3891,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   document.addEventListener('click', function(e){
     var t = e.target; if(!t || !t.closest) return;
     var tab = t.closest('[data-cmtab]'); if(tab){ CM.tab = tab.getAttribute('data-cmtab'); CM.q = ''; CM.co = ''; CM.pst = ''; var l = document.getElementById('list'); if(l){ l.innerHTML = clientsShell(); clientsPaint(); } return; }
+    var cc0 = t.closest('[data-cmco]'); if(cc0){ var v = cc0.getAttribute('data-cmco'); CM.co = (CM.co === v) ? '' : v; var sel = document.querySelector('select[data-cm=co]'); if(sel) sel.value = CM.co; clientsPaint(); return; }
     var ql = t.closest('[data-cmql]'); if(ql){ CM.ql = ql.getAttribute('data-cmql'); clientsPaint(); return; }
     var act = t.closest('[data-cmact]');
     if(act){
