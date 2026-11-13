@@ -3686,9 +3686,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     return tabs + '<div class="cm-bar"><input id="cmQ" type="search" name="cm-search-' + Date.now() + '" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Search" value="' + escapeHtml(CM.q) + '">' +
       cmOpts('sm', CM.sm, 'All salesmen') + cmOpts('co', CM.co, 'All countries') + cmOpts('g', CM.g, 'All grades', ['A','B','C']) + cmOpts('t', CM.ty, 'All types') + '</div>' +
       '<div id="cmChips" class="cm-chips"></div>' +
-      '<div class="cm-center cm-acts"><select data-cm="ord" class="cm-ord" autocomplete="off">' +
-        [['grade','Sort: Grade'],['tons','Sort: Biggest tons'],['name','Sort: Name A–Z'],['last','Sort: Longest no contact']].map(function(o){ return '<option value="' + o[0] + '"' + (CM.ord === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
-        '<button type="button" class="dash-export" data-cmact="xls">&#8681; Excel</button><button type="button" class="dash-export" data-cmact="pdf">&#128438; PDF</button><button type="button" class="dash-export" data-cmact="add">+ Add client</button></div>' +
+      '<div class="cm-center cm-acts"><button type="button" class="dash-export" data-cmact="xls">&#8681; Excel</button><button type="button" class="dash-export" data-cmact="add">+ Add client</button></div>' +
       '<div id="cmOut"></div>';
   }
   function cmChips(){
@@ -3698,7 +3696,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     if(CM.ql && top.indexOf(CM.ql) === -1) top.push(CM.ql);
     el.innerHTML = '<button type="button" class="cm-chip' + (!CM.ql ? ' on' : '') + '" data-cmql="">All qualities</button>' +
       top.map(function(t){ return '<button type="button" class="cm-chip' + (CM.ql === t ? ' on' : '') + '" data-cmql="' + escapeHtml(t) + '">' + escapeHtml(t) + ' <i>' + cnt[t] + '</i></button>'; }).join('') +
-      '<button type="button" class="cm-chip cm-chip-warn' + (CM.stale ? ' on' : '') + '" data-cmstale="1">No contact 30d+</button>';
+      '';
   }
   function cmPhoneHtml(c){
     return cmPhones(c.ph, c.co).map(function(x){
@@ -3708,7 +3706,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   }
   function cmCard(c){
     var sub = [escapeHtml(c.t || ''), escapeHtml(c.ci || ''), c.sm ? '<span class="cm-sm">' + escapeHtml(c.sm) + '</span>' : ''].filter(Boolean).join(' · ');
-    var last = c._last ? '<span class="cm-lc' + (Date.now() - c._last > 30 * DAY ? ' old' : '') + '">&#9990; ' + cmAgo(c._last) + '</span>' : '';
+    var last = c._last ? '<span class="cm-lc">&#9990; ' + cmAgo(c._last) + '</span>' : '';
     var det = [['Country', c.co], ['City', c.ci], ['Customer type', c.t], ['Salesman', c.sm], ['Grade', c.g], ['Business unit', c.bu], ['Phone', cmPhoneHtml(c), 1], ['Contact', c.cp], ['Qualities', c.q], ['Est. annual', c.mt], ['Payment', c.pt], ['Notes', c.n], ['ID', c.id]]
       .filter(function(r){ return r[1]; }).map(function(r){ return '<div class="cm-row"><b>' + r[0] + ':</b> ' + (r[2] ? r[1] : escapeHtml(r[1])) + '</div>'; }).join('');
     return '<div class="cm-card' + (CM.open[c._k] ? ' open' : '') + '" data-k="' + escapeHtml(c._k) + '"><div class="cm-top"><div><div class="cm-name">' + escapeHtml(c.c) + (c._new ? ' <span class="cm-newtag">NEW</span>' : '') + '</div><div class="cm-sub">' + sub + (last ? ' · ' + last : '') + '</div></div>' + (c.g ? '<span class="cm-g ' + c.g + '">' + c.g + '</span>' : '') + '</div>' +
@@ -3725,8 +3723,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       if(k !== cur){ cur = k; html += '<div class="cm-grp"><span>' + escapeHtml(k) + '</span><span>' + groups[k].length + '</span></div>'; }
       html += cmCard(c);
     });
-    var gc = { A: 0, B: 0, C: 0 }, tons = 0; f.forEach(function(c){ if(gc[c.g] !== undefined) gc[c.g]++; tons += cmTons(c); });
-    out.innerHTML = '<div class="cm-sum">' + f.length + ' client' + (f.length === 1 ? '' : 's') + ' &middot; est. ' + Math.round(tons).toLocaleString('en-US') + ' t/yr &middot; <b class="gA">A ' + gc.A + '</b> &middot; <b class="gB">B ' + gc.B + '</b> &middot; <b class="gC">C ' + gc.C + '</b></div>' + (html || '<div class="cm-sum">No client matches.</div>');
+    out.innerHTML = '<div class="cm-sum">' + f.length + ' client' + (f.length === 1 ? '' : 's') + '</div>' + (html || '<div class="cm-sum">No client matches.</div>');
     out.querySelectorAll('.cm-card.open').forEach(function(x){ var hs = x.querySelector('[data-hist]'), cc = cmFind(x.getAttribute('data-k')); if(hs && cc) hs.innerHTML = cmHist(cc); });
   }
   function cmFind(k){ return cmAll().filter(function(c){ return c._k === k; })[0]; }
@@ -3870,20 +3867,6 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, prospects ? 'Prospects' : 'Clients');
     XLSX.writeFile(wb, name + new Date().toISOString().slice(0, 10) + '.xlsx');
   }
-  function cmPrintPdf(){
-    var f = cmFiltered(); if(!f.length){ showToast('Nothing to print'); return; }
-    var w = window.open('', '_blank'); if(!w){ showToast('Allow pop-ups to print'); return; }
-    var cur = null, body = '';
-    f.forEach(function(c){
-      var k = c.co || 'No country';
-      if(k !== cur){ cur = k; body += '<tr class="g"><td colspan="6">' + escapeHtml(k) + '</td></tr>'; }
-      body += '<tr><td><b>' + escapeHtml(c.c) + '</b><br><span class="s">' + escapeHtml([c.t, c.ci].filter(Boolean).join(' · ')) + '</span></td><td class="gr"><span class="b' + (c.g || '') + '">' + escapeHtml(c.g || '') + '</span></td><td>' + escapeHtml(c.sm || '') + '</td><td>' + (cmPhones(c.ph, c.co).map(function(x){ return escapeHtml(x.txt); }).join('<br>') || escapeHtml(c.ph || '')) + '</td><td>' + escapeHtml(c.cp || '') + '</td><td>' + escapeHtml(c.q || '') + (c.mt ? '<br><span class="s">' + escapeHtml(c.mt) + '</span>' : '') + '</td></tr>';
-    });
-    var title = 'HIPCO Client Master' + (CM.sm ? ' – ' + CM.sm : '') + (CM.ql ? ' – ' + CM.ql : '');
-    w.document.write('<!doctype html><meta charset="utf-8"><title>' + escapeHtml(title) + '</title><style>@page{size:A4;margin:10mm}body{font:9pt Helvetica,Arial,sans-serif;color:#111}h1{font-size:14pt;color:#1F4283;margin:0 0 2mm}.d{color:#666;margin-bottom:4mm}table{border-collapse:collapse;width:100%}th{background:#1F4283;color:#fff;text-align:left;padding:1.6mm;font-size:8pt}td{padding:1.6mm;border-bottom:.2mm solid #ccc;vertical-align:top}tr.g td{background:#E6ECFB;color:#1F4283;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:0}.s{color:#666;font-size:7.5pt}.gr{text-align:center;width:9mm}.bA,.bB,.bC{display:inline-block;min-width:5mm;text-align:center;font-weight:700;padding:.4mm 1.2mm;border:.4mm solid #000}.bA{background:#000;color:#fff}.bB{background:#bbb}.bC{border-style:dashed}</style><h1>' + escapeHtml(title) + '</h1><div class="d">' + f.length + ' clients · ' + cmDate(Date.now()) + '</div><table><tr><th>Company</th><th>Grade</th><th>Salesman</th><th>Phone</th><th>Contact</th><th>Qualities / est. MT</th></tr>' + body + '</table>');
-    w.document.close(); w.focus(); setTimeout(function(){ try{ w.print(); }catch(e){} }, 400);
-  }
-
   // ----- events -----
   document.addEventListener('input', function(e){ if(e.target && e.target.id === 'cmQ'){ CM.q = e.target.value; clientsPaint(); } });
   document.addEventListener('change', function(e){
@@ -3894,11 +3877,10 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var t = e.target; if(!t || !t.closest) return;
     var tab = t.closest('[data-cmtab]'); if(tab){ CM.tab = tab.getAttribute('data-cmtab'); CM.q = ''; CM.co = ''; CM.pst = ''; var l = document.getElementById('list'); if(l){ l.innerHTML = clientsShell(); clientsPaint(); } return; }
     var ql = t.closest('[data-cmql]'); if(ql){ CM.ql = ql.getAttribute('data-cmql'); clientsPaint(); return; }
-    if(t.closest('[data-cmstale]')){ CM.stale = !CM.stale; clientsPaint(); return; }
     var act = t.closest('[data-cmact]');
     if(act){
       var a = act.getAttribute('data-cmact'), card = act.closest('.cm-card'), k = card ? card.getAttribute('data-k') : '';
-      if(a === 'xls') cmExportXlsx(false); else if(a === 'xlsp') cmExportXlsx(true); else if(a === 'pdf') cmPrintPdf();
+      if(a === 'xls') cmExportXlsx(false); else if(a === 'xlsp') cmExportXlsx(true); 
       else if(a === 'add') cmOpenForm('client'); else if(a === 'addp') cmOpenForm('prospect');
       else if(a === 'edit') cmOpenForm('client', k); else if(a === 'pedit') cmOpenForm('prospect', k);
       else if(a === 'vcf'){ var c = cmFind(k); if(c) cmDownload((c.c || 'contact').replace(/[^\w\-]+/g, '_') + '.vcf', cmVcf(c), 'text/vcard'); }
