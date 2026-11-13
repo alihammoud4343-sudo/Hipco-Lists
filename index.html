@@ -3728,7 +3728,7 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
     var ORD = ['FBB','UWF','CWF','SBS','CKB','WLC','DB','GB','KL','TL','WTTL','FL','NP','UCO','BK','A4','PE','SK','NCR','LB','TS','STK','SEC','LP'];   // the app's usual quality order
     var top = Object.keys(cnt).sort(function(a, b){
       var ia = ORD.indexOf(a), ib = ORD.indexOf(b); if(ia < 0) ia = 99; if(ib < 0) ib = 99;
-      return ia !== ib ? ia - ib : cnt[b] - cnt[a];
+      return cnt[b] !== cnt[a] ? cnt[b] - cnt[a] : ia - ib;   // most clients first, fewest last (ties: usual order)
     });
     if(CM.ql && top.indexOf(CM.ql) === -1){ top.push(CM.ql); cnt[CM.ql] = 0; }
     var total = cmFiltered(true).length;
