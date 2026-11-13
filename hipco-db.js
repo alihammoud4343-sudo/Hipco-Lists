@@ -8,12 +8,12 @@
   'use strict';
   var CFG = window.HIPCO_CFG || {};
   var REMOTE = !!(CFG.supabaseUrl && CFG.anonKey);
-  var DYN = ['sent', 'followup', 'inquiries', 'reminders', 'stocklots'];   // dynamic collections ('stocklots' holds status overrides only)
+  var DYN = ['sent', 'followup', 'inquiries', 'reminders', 'stocklots', 'cmedits', 'cmlog', 'prospects'];   // dynamic collections ('stocklots' holds status overrides only)
   var LS = 'hipco_dyn_v1';
-  var seedData = { sent: {}, followup: {}, inquiries: {}, reminders: {}, stocklots: {} };
+  var seedData = { sent: {}, followup: {}, inquiries: {}, reminders: {}, stocklots: {}, cmedits: {}, cmlog: {}, prospects: {} };
 
   var stat = { stocklots: [], clients: {}, meta: {} };       // from /data
-  var dyn = { sent: {}, followup: {}, inquiries: {}, reminders: {}, stocklots: {} };   // id -> data
+  var dyn = { sent: {}, followup: {}, inquiries: {}, reminders: {}, stocklots: {}, cmedits: {}, cmlog: {}, prospects: {} };   // id -> data
   var subs = [];       // {kind:'col'|'doc', path, cb, err}
   var statJson = '';
   var loadErr = false;
@@ -147,7 +147,7 @@
       var page = await r.json(); rows = rows.concat(page);
       if(page.length < 1000) break;
     }
-    var n = { sent: {}, followup: {}, inquiries: {}, reminders: {}, stocklots: {} };
+    var n = { sent: {}, followup: {}, inquiries: {}, reminders: {}, stocklots: {}, cmedits: {}, cmlog: {}, prospects: {} };
     rows.forEach(function(x){ if(n[x.col]) n[x.col][x.id] = x.data; });
     // keep optimistic writes that have not reached the server yet
     Object.keys(pending).forEach(function(k){ var p = pending[k]; if(n[p.col]){ if(p.del) delete n[p.col][p.id]; else n[p.col][p.id] = p.data; } });
