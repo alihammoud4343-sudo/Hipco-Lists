@@ -454,8 +454,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .cm-bar{ display:flex; flex-wrap:nowrap; gap:6px; align-items:center; justify-content:center; margin:34px auto 18px; padding:0; width:100%; max-width:820px; box-sizing:border-box; }
   @media (min-width:600px){ .cm-bar input,.cm-bar select{ font-size:14px; height:48px; line-height:46px; } }
   .cm-bar input,.cm-bar select{ font:inherit; font-size:10.5px; color:var(--ink); background:var(--surface); border:1.5px solid #C9D0E3; border-radius:12px; padding:0 2px; min-width:0; height:44px; line-height:42px; box-sizing:border-box; text-align:center; text-align-last:center; box-shadow:0 1px 3px rgba(15,27,61,.08); vertical-align:middle; }
-  .cm-bar input{ flex:1 1 0; }
-  .cm-bar select{ flex:1.3 1 0; -webkit-appearance:none; appearance:none; background-image:none !important; padding-right:3px !important; text-overflow:clip; }
+  .cm-bar input{ flex:.9 1 0; }
+  .cm-bar select{ flex:1.2 1 0; -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231F4283' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important; background-repeat:no-repeat !important; background-position:right 3px center !important; background-size:7px 4px !important; padding-left:2px !important; padding-right:11px !important; font-size:9.5px; text-overflow:clip; }
   .cm-center{ display:flex; justify-content:center; margin:0 0 10px; }
   .cm-sum{ font-size:12.5px; color:var(--ink-2); margin:0 2px 8px; }
   .cm-grp{ font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--navy); margin:16px 2px 6px; display:flex; justify-content:space-between; }
@@ -3669,10 +3669,34 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       return [c.c, c.co, c.ci, c.ph, c.cp, c.q, c.n, c.sm, c.t, c.id].join(' ').toLowerCase().indexOf(q) !== -1;
     }));
   }
+  function cmOptVals(key){   // options of one dropdown = values that exist among clients matching the OTHER dropdowns
+    var set = {};
+    cmAll().forEach(function(c){
+      if(key !== 'sm' && CM.sm && c.sm !== CM.sm) return;
+      if(key === 'sm') { var v0 = c.sm; if(v0) set[v0] = true; return; }   // salesman list always shows everyone
+      if(key !== 'co' && CM.co && (c.co || '—') !== CM.co) return;
+      if(key !== 'g' && CM.g && c.g !== CM.g) return;
+      if(key !== 't' && CM.ty && c.t !== CM.ty) return;
+      var v = c[key] || (key === 'co' ? '—' : ''); if(v) set[v] = true;
+    });
+    return Object.keys(set).sort();
+  }
   function cmOpts(key, cur, label, fixed){
-    var set = {}; cmAll().forEach(function(c){ var v = c[key] || (key === 'co' ? '—' : ''); if(v) set[v] = true; });
-    var vals = fixed || Object.keys(set).sort();
+    var vals = cmOptVals(key); if(fixed) vals = fixed.filter(function(v){ return vals.indexOf(v) !== -1; });
+    if(cur && vals.indexOf(cur) === -1) vals.push(cur);
     return '<select data-cm="' + key + '" autocomplete="off"><option value="">' + label + '</option>' + vals.map(function(v){ return '<option' + (cur === v ? ' selected' : '') + '>' + escapeHtml(v) + '</option>'; }).join('') + '</select>';
+  }
+  function cmFixSelects(){   // after a dropdown changes: drop picks that no longer exist, rebuild the other lists
+    if(CM.tab !== 'clients') return;
+    if(CM.co && cmOptVals('co').indexOf(CM.co) === -1) CM.co = '';
+    if(CM.g && cmOptVals('g').indexOf(CM.g) === -1) CM.g = '';
+    if(CM.ty && cmOptVals('t').indexOf(CM.ty) === -1) CM.ty = '';
+    var L = { sm: ['sm', CM.sm, 'All salesmen'], co: ['co', CM.co, 'All countries'], g: ['g', CM.g, 'All grades', ['A','B','C']], t: ['t', CM.ty, 'All types'] };
+    Object.keys(L).forEach(function(k){
+      var el = document.querySelector('select[data-cm="' + k + '"]'); if(!el) return;
+      var a = L[k], tmp = document.createElement('div'); tmp.innerHTML = cmOpts(a[0], a[1], a[2], a[3]);
+      el.innerHTML = tmp.firstChild.innerHTML; el.value = a[1] || '';
+    });
   }
   function cmDate(t){ var d = new Date(t); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
   function cmAgo(t){ var n = Math.floor((Date.now() - t) / DAY); return n <= 0 ? 'today' : n === 1 ? 'yesterday' : n + ' days ago'; }
@@ -3886,12 +3910,12 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   document.addEventListener('input', function(e){ if(e.target && e.target.id === 'cmQ'){ CM.q = e.target.value; clientsPaint(); } });
   document.addEventListener('change', function(e){
     var k = e.target && e.target.getAttribute && e.target.getAttribute('data-cm'); if(!k) return;
-    CM[k === 't' ? 'ty' : k] = e.target.value; clientsPaint();
+    CM[k === 't' ? 'ty' : k] = e.target.value; cmFixSelects(); clientsPaint();
   });
   document.addEventListener('click', function(e){
     var t = e.target; if(!t || !t.closest) return;
     var tab = t.closest('[data-cmtab]'); if(tab){ CM.tab = tab.getAttribute('data-cmtab'); CM.q = ''; CM.co = ''; CM.pst = ''; var l = document.getElementById('list'); if(l){ l.innerHTML = clientsShell(); clientsPaint(); } return; }
-    var cc0 = t.closest('[data-cmco]'); if(cc0){ var v = cc0.getAttribute('data-cmco'); CM.co = (CM.co === v) ? '' : v; var sel = document.querySelector('select[data-cm=co]'); if(sel) sel.value = CM.co; clientsPaint(); return; }
+    var cc0 = t.closest('[data-cmco]'); if(cc0){ var v = cc0.getAttribute('data-cmco'); CM.co = (CM.co === v) ? '' : v; cmFixSelects(); clientsPaint(); return; }
     var ql = t.closest('[data-cmql]'); if(ql){ CM.ql = ql.getAttribute('data-cmql'); clientsPaint(); return; }
     var act = t.closest('[data-cmact]');
     if(act){
