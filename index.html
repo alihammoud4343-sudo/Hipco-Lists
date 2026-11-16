@@ -810,6 +810,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
   .inq-by .ib-b{ margin-top:6px; height:5px; border-radius:99px; background:var(--chip); overflow:hidden; }
   .inq-by .ib-b i{ display:block; height:100%; border-radius:99px; background:var(--hero-a); }
   .inq-by button.on{ background:var(--chip); }
+  .inq-pdfs .ip-t{ margin-top:14px; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--mut,#667); }
+  .inq-pdfs .it-x{ margin-top:6px; }
   .it-x{ margin-top:12px; width:100%; border:1px solid var(--line); background:var(--chip); color:var(--ink); border-radius:12px; padding:10px; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
   .inq-list-h h3{ margin:0; font:400 22px var(--f-display); color:var(--ink); }
   .inq-list-h select{ font:inherit; font-size:13px; padding:7px 10px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
@@ -3328,6 +3330,8 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       tot.innerHTML += '<div class="inq-by">' + order.map(function(k){
         return '<button type="button" class="' + (inqFilter === k ? 'on' : '') + '" onclick="__iqChip(\'' + k.replace(/'/g, '') + '\')"><div class="ib-t">' + escapeHtml(k) + '<span><b>' + cnt[k] + '</b> ' + (cnt[k] === 1 ? 'inquiry' : 'inquiries') + '</span></div><div class="ib-b"><i style="width:' + Math.round(cnt[k] / mx * 100) + '%"></i></div></button>'; }).join('') + '</div>';
       tot.innerHTML += '<button type="button" class="it-x" onclick="__inqXlsx(this)">Download all inquiries as Excel</button>';
+      tot.innerHTML += '<div class="inq-pdfs"><div class="ip-t">Export inquiries as PDF</div><button type="button" class="it-x" onclick="__inqReport(\'\', this)">All inquiries (' + inqDocs.length + ')</button>' + order.map(function(k){
+        return '<button type="button" class="it-x" onclick="__inqReport(\'' + k.replace(/'/g, '') + '\', this)">' + escapeHtml(k) + ' only (' + cnt[k] + ')</button>'; }).join('') + '</div>';
       tot.hidden = !inqDocs.length;
     }
     var el = document.getElementById('iqList');
@@ -3485,6 +3489,48 @@ if(window.navigator.standalone&&v<20){var st=document.createElement('style');st.
       showToast('PDF ready');
     }catch(e){ showToast('Could not create the PDF here. Please try again.'); }
     finally{ if(btn){ btn.disabled = false; btn.textContent = old; } }
+  };
+
+  // ---------- Inquiries report PDF: all inquiries, or one salesman alone ----------
+  function buildInqReport(sm){
+    var doc = pdfDoc(), M = doc.M, W = doc.W, now = new Date();
+    var all = inqOrder(), rows = all.filter(function(d){ return !sm || (d.salesman || 'Other') === sm; });
+    doc.y(M);
+    doc.rect(0, 0, W, 22, NAVY);
+    doc.text(M, 10, 'HIPCO Inquiries' + (sm ? ' - ' + sm : ' - all salesmen'), 15, { bold:true, color:[255,255,255] });
+    doc.text(M, 17, rows.length + (rows.length === 1 ? ' inquiry' : ' inquiries') + '   |   ' + now.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }), 8.5, { color:[220,228,245] });
+    doc.y(28);
+    var groups = {}, keys = [];
+    rows.forEach(function(d){ var k = d.salesman || 'Other'; if(!groups[k]){ groups[k] = []; keys.push(k); } groups[k].push(d); });
+    var rank = ['Ahmad','Nadine','Ouseili','Wissam','Soha','Ali','Bob','Mohamad'];
+    keys.sort(function(a, b){ var x = rank.indexOf(a), y = rank.indexOf(b); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); });
+    keys.forEach(function(k){
+      if(!sm){ doc.ensure(24); pdfBar(doc, k, groups[k].length + (groups[k].length === 1 ? ' inquiry' : ' inquiries')); }
+      pdfTable(doc, [{w:15},{w:19},{w:36},{w:30},{w:42},{w:22},{w:18}], ['No.', 'Date', 'Client', 'Product', 'Size / GSM / Qty', 'Destination', 'Status'], groups[k].map(function(d){
+        var det = (d.sizes && d.sizes.length) ? d.sizes.map(function(x){ return [x.size, x.gsm ? x.gsm + ' gsm' : '', x.qty].filter(Boolean).join(' / '); }).join('; ') : [d.size, d.gsm ? d.gsm + ' gsm' : '', d.qty].filter(Boolean).join(' / ');
+        var st = inqStatus(d), dt = d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-GB', { timeZone:'Asia/Beirut', day:'numeric', month:'short', year:'2-digit' }) : (d.date || '');
+        return ['INQ-' + pad3(inqShownNo(d)), dt, { t:d.client || '', bold:true }, d.product || '', det, d.country || '', { t:INQ_STATUS[st].en, bold:true, color: st === 'open' ? AMB : GREY }];
+      }));
+      var notes = groups[k].filter(function(d){ return d.outcomeNote || d.comments; });
+      if(notes.length){
+        doc.text(M, doc.y(), 'NOTES', 6.5, { bold:true, color:GREY }); doc.y(doc.y() + 1.5);
+        pdfTable(doc, [{w:15},{w:40},{w:127}], ['No.', 'Client', 'Note'], notes.map(function(d){ return ['INQ-' + pad3(inqShownNo(d)), d.client || '', [d.comments, d.outcomeNote].filter(Boolean).join('  |  ')]; }));
+      }
+    });
+    return doc.finish('HIPCO Stocklot Offshore  |  Inquiries' + (sm ? ' - ' + sm : '') + '  |  ' + now.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }));
+  }
+  window.__inqReport = async function(sm, btn){
+    var n = inqDocs.filter(function(d){ return !sm || (d.salesman || 'Other') === sm; }).length;
+    if(!n){ showToast('No inquiries to export'); return; }
+    var old = btn ? btn.textContent : ''; if(btn){ btn.disabled = true; btn.textContent = 'Preparing…'; }
+    try{
+      var bytes = buildInqReport(sm), d = new Date(), p2 = function(x){ return ('0' + x).slice(-2); };
+      var name = 'HIPCO_Inquiries_' + (sm ? sm.replace(/[^A-Za-z0-9]/g, '') : 'All') + '_' + p2(d.getDate()) + '-' + p2(d.getMonth() + 1) + '-' + d.getFullYear() + '.pdf';
+      var file = new File([bytes], name, { type:'application/pdf' });
+      var res = await saveViaDownloads(file);
+      showToast(res.ok ? (res.how === 'tab' ? 'PDF opened - save it from there' : 'PDF ready') : 'Could not save the PDF');
+    }catch(e){ showToast('Could not build the PDF'); try{ console.error(e); }catch(_){} }
+    if(btn){ btn.disabled = false; btn.textContent = old; }
   };
   window.__inqStatus = async function(id, v){
     if(!dbRef) return;
